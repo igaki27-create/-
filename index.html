@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>取材管理システム 試作２号</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ca:#185FA5;--cal:#E6F1FB;--cb:#ffffff;--cb2:#f5f5f5;
+  --cbr:rgba(0,0,0,0.12);--cbr2:rgba(0,0,0,0.25);
+  --ct:#1a1a1a;--ct2:#555;--ct3:#999;
+  --border-radius-md:8px;--border-radius-lg:12px;
+  --color-background-primary:#fff;--color-background-secondary:#f5f5f5;
+  --color-background-success:#e6f9f0;--color-background-warning:#fff8e1;
+  --color-background-danger:#fdecea;--color-background-info:#e8f0fe;
+  --color-text-primary:#1a1a1a;--color-text-secondary:#555;--color-text-tertiary:#999;
+  --color-text-success:#0a6e3f;--color-text-warning:#7a5200;
+  --color-text-danger:#c62828;--color-text-info:#1a56db;
+  --color-border-tertiary:rgba(0,0,0,0.12);--color-border-secondary:rgba(0,0,0,0.25);
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;
+}
+body{font-family:var(--font-sans);background:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:10px}
+#app{display:flex;height:660px;width:100%;max-width:1100px;border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--cb2);box-shadow:0 4px 24px rgba(0,0,0,0.10)}
+#sb{width:192px;background:var(--cb);border-right:0.5px solid var(--cbr);display:flex;flex-direction:column;flex-shrink:0}
+#sbh{padding:13px 13px 9px;border-bottom:0.5px solid var(--cbr)}
+#sbh h1{font-size:13px;font-weight:500;color:var(--ct)}
+#sbh p{font-size:11px;color:var(--ct2);margin-top:2px}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 13px;font-size:13px;cursor:pointer;color:var(--ct2);border-left:2px solid transparent;transition:all .12s}
+.ni:hover{background:var(--cb2);color:var(--ct)}
+.ni.active{color:var(--ca);background:var(--cal);border-left-color:var(--ca);font-weight:500}
+.nii{width:14px;height:14px;opacity:.7;flex-shrink:0}
+.ni.active .nii{opacity:1}
+.ns{padding:9px 13px 3px;font-size:10px;font-weight:500;color:var(--ct3);letter-spacing:.8px}
+.nbg{background:var(--color-background-danger);color:var(--color-text-danger);border-radius:10px;font-size:10px;padding:1px 6px;margin-left:auto}
+#mn{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#tb{background:var(--cb);border-bottom:0.5px solid var(--cbr);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#tbt{font-size:14px;font-weight:500;color:var(--ct)}
+.btn{padding:5px 11px;font-size:12px;border-radius:var(--border-radius-md);border:0.5px solid var(--cbr2);background:var(--cb);color:var(--ct);cursor:pointer;font-family:var(--font-sans)}
+.btn:hover{background:var(--cb2)}
+.btp{background:var(--ca);color:#fff;border-color:var(--ca)}
+.btp:hover{background:#0C447C}
+.btg{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btg:hover{background:#085041}
+.btd{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--cbr)}
+.bts{padding:3px 9px;font-size:11px}
+.btn-kantei{background:#D85A30;color:#fff;border-color:#D85A30}
+.btn-kantei:hover{background:#993C1D}
+#ct{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.vw{display:none;flex:1;overflow:hidden;flex-direction:column}
+.vw.active{display:flex}
+.sa{flex:1;overflow-y:auto;padding:13px 16px}
+.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.sc{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-md);padding:10px 12px}
+.sl{font-size:10px;color:var(--ct2);font-weight:500;letter-spacing:.5px}
+.sv{font-size:22px;font-weight:500;color:var(--ct);margin-top:2px}
+.ss{font-size:10px;color:var(--ct3)}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px}
+.uc{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);padding:13px;transition:border-color .12s}
+.uc:hover{border-color:var(--cbr2)}
+.uh{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.unl{font-size:11px;font-weight:500;color:var(--ca);background:var(--cal);padding:2px 8px;border-radius:10px}
+.ust{font-size:10px;padding:2px 7px;border-radius:10px}
+.sa2{background:var(--color-background-success);color:var(--color-text-success)}
+.ss2{background:var(--cb2);color:var(--ct2)}
+.sb2{background:var(--color-background-warning);color:var(--color-text-warning)}
+.umems{display:flex;gap:8px;margin-bottom:9px}
+.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.mn2{font-size:12px;font-weight:500;color:var(--ct)}
+.mr2{font-size:10px;color:var(--ct2)}
+.me{font-size:10px;color:var(--ca);cursor:pointer;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:128px}
+.me:hover{text-decoration:underline}
+.ut{font-size:11px;color:var(--ct2);border-top:0.5px solid var(--cbr);padding-top:7px;margin-bottom:8px}
+.uer{display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--cbr);padding-top:8px}
+.uea{font-size:10px;color:var(--ct2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ic{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);padding:12px;display:flex;gap:11px;margin-bottom:7px}
+.itb{text-align:center;min-width:48px;background:var(--cb2);border-radius:var(--border-radius-md);padding:5px;flex-shrink:0}
+.itm{font-size:14px;font-weight:500;color:var(--ct)}
+.id2{font-size:10px;color:var(--ct2);margin-top:1px}
+.iti{font-size:13px;font-weight:500;color:var(--ct);margin-bottom:3px}
+.imt{display:flex;gap:10px;font-size:11px;color:var(--ct2);flex-wrap:wrap;margin-bottom:4px}
+.ino{font-size:11px;color:var(--ct3);background:var(--cb2);padding:4px 8px;border-radius:var(--border-radius-md);border-left:2px solid var(--cbr2)}
+.iu{font-size:11px;color:var(--ca);background:var(--cal);padding:2px 7px;border-radius:10px;cursor:pointer}
+.iu:hover{text-decoration:underline}
+.pd{width:7px;height:7px;border-radius:50%;display:inline-block}
+.ph{background:#E24B4A}.pm{background:#EF9F27}.pl{background:#639922}
+.uab2{font-size:10px;background:#FAEEDA;color:#633806;padding:2px 7px;border-radius:10px;margin-left:6px}
+.ktag{font-size:10px;background:#FAECE7;color:#712B13;padding:2px 7px;border-radius:10px;margin-left:5px}
+.tlt{padding:9px 16px;background:var(--cb);border-bottom:0.5px solid var(--cbr);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.tldl{font-size:12px;font-weight:500;color:var(--ct)}
+.tltabs{display:flex;gap:2px}
+.tltab{padding:3px 9px;font-size:11px;border-radius:var(--border-radius-md);border:0.5px solid var(--cbr);background:var(--cb2);color:var(--ct2);cursor:pointer}
+.tltab.active{background:var(--ca);color:#fff;border-color:var(--ca)}
+.tlleg{display:flex;gap:10px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.lli{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--ct2)}
+.lls{width:20px;height:7px;border-radius:2px}
+.tlb{flex:1;overflow:auto}
+.tlg{min-width:820px}
+.tlhd{display:flex;position:sticky;top:0;z-index:10;background:var(--cb);border-bottom:0.5px solid var(--cbr)}
+.tlc{width:116px;flex-shrink:0;border-right:0.5px solid var(--cbr);padding:7px 8px;font-size:10px;font-weight:500;color:var(--ct2);letter-spacing:.5px;display:flex;align-items:flex-end}
+.tlhh{flex:1;display:flex}
+.tlhc{flex:1;text-align:center;font-size:10px;color:var(--ct3);padding:7px 0;border-right:0.5px solid var(--cbr);min-width:52px}
+.tug{border-bottom:0.5px solid var(--cbr)}
+.tug-ua{border-bottom:2px solid var(--cbr2);background:var(--cb2)}
+.ln{height:22px;position:relative;display:flex;align-items:center}
+.lnl{position:absolute;left:3px;font-size:9px;color:var(--ct3);z-index:1;pointer-events:none}
+.vl{position:absolute;top:0;bottom:0;width:0.5px;background:var(--cbr);pointer-events:none}
+.db{position:absolute;top:3px;bottom:3px;border-radius:3px;background:#D3D1C7;border:0.5px solid #B4B2A9}
+.ivb{position:absolute;top:2px;bottom:2px;border-radius:3px;display:flex;align-items:center;padding:0 5px;cursor:pointer;overflow:hidden}
+.ivb:hover{opacity:.8;z-index:5}
+.ivb-t{font-size:9px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0C447C}
+.kb{position:absolute;top:2px;bottom:2px;border-radius:3px;display:flex;align-items:center;padding:0 5px;cursor:pointer;overflow:hidden}
+.kb:hover{opacity:.8;z-index:5}
+.kb-t{font-size:9px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#712B13}
+.uab3{position:absolute;top:2px;bottom:2px;border-radius:3px;display:flex;align-items:center;padding:0 6px;cursor:pointer;overflow:hidden;border:1px dashed #BA7517;background:#FAEEDA}
+.uab3:hover{opacity:.8;z-index:5}
+.uab3-t{font-size:9px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#633806}
+.nwl{position:absolute;top:0;bottom:0;width:1.5px;background:#E24B4A;z-index:20;pointer-events:none}
+.nwd{position:absolute;top:-3px;left:-3.5px;width:8px;height:8px;border-radius:50%;background:#E24B4A}
+.unt2{font-size:11px;font-weight:500;color:var(--ct)}
+.uns2{font-size:10px;color:var(--ct2);display:flex;align-items:center;gap:3px;margin-top:1px}
+.unav2{width:13px;height:13px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:500}
+.pt{padding:9px 16px;background:var(--cb);border-bottom:0.5px solid var(--cbr);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.pp{flex:1;overflow-y:auto;padding:16px;background:var(--cb2)}
+.a4{background:#fff;width:100%;max-width:750px;margin:0 auto 20px;border:0.5px solid #ccc;border-radius:3px;padding:22px 26px;font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN',sans-serif;color:#1a1a1a}
+.a4-ph{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #1a1a1a;padding-bottom:8px;margin-bottom:12px}
+.a4-ttl{font-size:17px;font-weight:700;letter-spacing:1px}
+.a4-meta{text-align:right;font-size:10px;color:#555;line-height:1.8}
+.a4-body{display:flex;gap:0}
+.k-col{flex-shrink:0;border-right:2px solid #c8860a;margin-right:10px}
+.k-col-hdr{font-size:8px;font-weight:700;color:#7d3c00;text-align:center;padding:3px 2px 4px;border-bottom:1px solid #c8860a;background:#fff8ee;line-height:1.4;width:68px}
+.k-body{position:relative;width:68px}
+.k-tick{position:absolute;left:0;right:0;border-top:0.5px solid #e8c88a}
+.k-tick-l{font-size:7px;color:#9a6010;padding-left:2px;line-height:1;display:block;margin-top:-1px}
+.k-seg{position:absolute;left:4px;right:4px;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:2px}
+.k-seg-l{font-size:7px;color:#fff;font-weight:500;text-align:center;line-height:1.3}
+.iv-wrap{flex:1;min-width:0}
+.iv-hdr{display:flex;background:#2c3e50;color:#fff;font-size:9.5px;font-weight:500}
+.iv-hdr-c{padding:5px 6px;flex-shrink:0}
+.iv-rows{}
+.iv-row{display:flex;overflow:hidden;border-bottom:0.5px solid #e0e0e0}
+.iv-row:nth-child(even){background:#f9f9f9}
+.iv-cell{padding:4px 6px;font-size:10px;line-height:1.45;overflow:hidden;border-right:0.5px solid #ececec;word-break:break-all;flex-shrink:0}
+.a4-kleg{padding:5px 8px;background:#fff8ee;border:0.5px solid #c8860a;border-radius:3px;font-size:9px;color:#7d3c00;margin-bottom:8px;line-height:1.8}
+.a4-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:9px;color:#555}
+.leg-sw{width:16px;height:9px;border-radius:2px}
+.a4-footer{border-top:0.5px solid #ccc;padding-top:6px;display:flex;justify-content:space-between;font-size:8.5px;color:#999;margin-top:8px}
+.sht{width:100%;border-collapse:collapse;font-size:12px}
+.sht th{text-align:left;padding:7px 9px;background:var(--cb2);color:var(--ct2);font-weight:500;border-bottom:0.5px solid var(--cbr);font-size:11px}
+.sht td{padding:7px 9px;border-bottom:0.5px solid var(--cbr);color:var(--ct);vertical-align:middle}
+.sht tr:last-child td{border-bottom:none}
+.sbar{height:16px;border-radius:3px;display:inline-flex;align-items:center;padding:0 6px;font-size:10px;font-weight:500}
+.sbe{background:var(--cal);color:var(--ca);border:0.5px solid #B5D4F4}
+.sbd{background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97}
+.sbo{background:var(--cb2);color:var(--ct3);border:0.5px solid var(--cbr)}
+.nfi{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);padding:10px 12px;display:flex;gap:10px;align-items:flex-start;margin-bottom:7px}
+.nfi.unread{border-left:2px solid var(--ca)}
+.nfic{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.nft{font-size:13px;color:var(--ct)}
+.nfs{font-size:11px;color:var(--ct2);margin-top:2px}
+.nftm{font-size:10px;color:var(--ct3);margin-left:auto;white-space:nowrap}
+.cw{display:flex;flex:1;overflow:hidden}
+.cl{width:170px;border-right:0.5px solid var(--cbr);overflow-y:auto;background:var(--cb);flex-shrink:0}
+.cc{padding:9px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;border-bottom:0.5px solid var(--cbr)}
+.cc:hover,.cc.active{background:var(--cb2)}
+.cav3{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;background:var(--cal);color:var(--ca)}
+.cn2{font-size:12px;font-weight:500;color:var(--ct)}
+.cp2{font-size:10px;color:var(--ct2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:86px}
+.od{width:6px;height:6px;border-radius:50%;background:#1D9E75;margin-left:auto;flex-shrink:0}
+.ca2{flex:1;display:flex;flex-direction:column;background:var(--cb2);overflow:hidden}
+.ch2{padding:9px 12px;background:var(--cb);border-bottom:0.5px solid var(--cbr);font-size:13px;font-weight:500;color:var(--ct);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.cm{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:75%}
+.mb2{padding:7px 10px;border-radius:var(--border-radius-lg);font-size:12px;line-height:1.5}
+.mfr .mb2{background:var(--cb);border:0.5px solid var(--cbr);color:var(--ct);border-bottom-left-radius:3px}
+.mme{align-self:flex-end}
+.mme .mb2{background:var(--ca);color:#fff;border-bottom-right-radius:3px}
+.mfr{align-self:flex-start}
+.mt2{font-size:10px;color:var(--ct3);margin-top:2px;padding:0 3px}
+.mme .mt2{text-align:right}
+.cia{padding:9px 10px;background:var(--cb);border-top:0.5px solid var(--cbr);display:flex;gap:7px;align-items:center;flex-shrink:0}
+.ci{flex:1;padding:6px 10px;border:0.5px solid var(--cbr2);border-radius:14px;font-size:12px;background:var(--cb2);color:var(--ct);font-family:var(--font-sans);outline:none}
+.ci:focus{border-color:var(--ca)}
+.sndb{width:28px;height:28px;border-radius:50%;background:var(--ca);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fm-layout{flex:1;display:flex;overflow:hidden}
+.fm-pool{width:210px;flex-shrink:0;border-right:0.5px solid var(--cbr);display:flex;flex-direction:column;background:var(--cb)}
+.fm-pool-hdr{padding:9px 11px 7px;border-bottom:0.5px solid var(--cbr);flex-shrink:0}
+.fm-pool-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.fm-pool-hdr h3{font-size:12px;font-weight:500;color:var(--ct)}
+.fm-pool-body{flex:1;overflow-y:auto;padding:7px}
+.fm-pool-footer{padding:7px;border-top:0.5px solid var(--cbr);flex-shrink:0}
+.search-inp{width:100%;padding:5px 9px;border:0.5px solid var(--cbr2);border-radius:var(--border-radius-md);font-size:11px;background:var(--cb2);color:var(--ct);font-family:var(--font-sans);outline:none}
+.search-inp:focus{border-color:var(--ca)}
+.fm-units{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:9px;align-content:start}
+.sc2{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-md);padding:6px 8px;margin-bottom:4px;display:flex;align-items:center;gap:7px;transition:border-color .12s,opacity .12s;user-select:none}
+.sc2.draggable{cursor:grab}
+.sc2.draggable:hover{border-color:var(--cbr2)}
+.sc2.is-dragging{opacity:.35}
+.sc2.is-assigned{opacity:.5;cursor:default}
+.s-av2{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.s-nm{font-size:11px;font-weight:500;color:var(--ct)}
+.s-rl{font-size:10px;color:var(--ct2)}
+.s-bg{font-size:9px;padding:1px 6px;border-radius:8px;margin-left:auto;flex-shrink:0;white-space:nowrap}
+.s-bg.free{background:var(--color-background-success);color:var(--color-text-success)}
+.s-bg.busy{background:var(--cb2);color:var(--ct3)}
+.u-slot{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);overflow:hidden;transition:border-color .15s}
+.u-slot.drag-over{border-color:var(--ca);border-width:1.5px;background:var(--cal)}
+.u-slot-hdr{padding:6px 10px;border-bottom:0.5px solid var(--cbr);display:flex;align-items:center;justify-content:space-between;background:var(--cb2)}
+.u-slot-num{font-size:11px;font-weight:500;color:var(--ca);background:var(--cal);padding:2px 8px;border-radius:10px}
+.u-slot-cnt{font-size:10px;color:var(--ct2)}
+.u-members{padding:6px 7px;min-height:52px}
+.chip{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:var(--border-radius-md);border:0.5px solid var(--cbr);margin-bottom:3px;background:var(--cb);cursor:grab;transition:border-color .1s;user-select:none}
+.chip:hover{border-color:var(--cbr2)}
+.chip.is-dragging{opacity:.35}
+.chip-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
+.chip-nm{font-size:10px;font-weight:500;color:var(--ct);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-rl{font-size:9px;color:var(--ct2);white-space:nowrap}
+.chip-rm{width:15px;height:15px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:var(--ct3);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto}
+.chip-rm:hover{background:var(--color-background-danger);color:var(--color-text-danger)}
+.drop-hint{border:1px dashed var(--cbr2);border-radius:var(--border-radius-md);padding:6px;text-align:center;font-size:9px;color:var(--ct3);transition:all .15s}
+.drop-hint.active{border-color:var(--ca);background:var(--cal);color:var(--ca)}
+.fm-status{background:var(--cb);border-top:0.5px solid var(--cbr);padding:6px 14px;display:flex;align-items:center;gap:14px;font-size:11px;color:var(--ct2);flex-shrink:0}
+.stdt{display:flex;align-items:center;gap:4px}
+.stdt-dot{width:7px;height:7px;border-radius:50%}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.27);display:none;align-items:center;justify-content:center;z-index:200}
+.mo.open{display:flex}
+.md{background:var(--cb);border-radius:var(--border-radius-lg);border:0.5px solid var(--cbr);padding:18px;width:460px;max-width:95%;max-height:90vh;overflow-y:auto}
+.mdh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mdh h2{font-size:14px;font-weight:500;color:var(--ct);display:flex;align-items:center;gap:7px}
+.xb{width:24px;height:24px;border-radius:50%;border:none;background:var(--cb2);cursor:pointer;color:var(--ct2);font-size:13px}
+.xb:hover{background:var(--cbr)}
+.fg{margin-bottom:10px}
+.fl{font-size:11px;color:var(--ct2);margin-bottom:3px;display:block;font-weight:500}
+.fi{width:100%;padding:7px 10px;border:0.5px solid var(--cbr2);border-radius:var(--border-radius-md);font-size:12px;background:var(--cb2);color:var(--ct);font-family:var(--font-sans);outline:none}
+.fi:focus{border-color:var(--ca)}
+.fi:disabled{opacity:.55;cursor:default}
+.fi.kf{border-color:#F0997B;background:#fff8f0;color:#7d3c00}
+textarea.fi{resize:vertical;min-height:60px;line-height:1.6}
+.mf{display:flex;gap:7px;justify-content:space-between;align-items:center;margin-top:14px}
+.frow{display:flex;gap:8px}
+.to-field{border:0.5px solid var(--cbr2);border-radius:var(--border-radius-md);padding:5px 8px;background:var(--cb2);min-height:36px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.tt3{background:var(--cal);color:var(--ca);font-size:11px;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:4px}
+.ttr3{cursor:pointer;color:var(--ca);font-size:13px}
+.ttr3:hover{color:#A32D2D}
+.type-toggle{display:flex;gap:0;border:0.5px solid var(--cbr2);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:14px}
+.type-opt{flex:1;position:relative}
+.type-opt input[type=radio]{position:absolute;opacity:0;width:0;height:0}
+.type-opt label{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ct2);background:var(--cb2);transition:all .15s;border-right:0.5px solid var(--cbr2)}
+.type-opt:last-child label{border-right:none}
+.type-opt.t-normal input:checked+label{color:var(--ca);background:var(--cal)}
+.type-opt.t-kantei input:checked+label{color:#712B13;background:#FAECE7}
+.type-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kantei-banner{display:none;background:#FAECE7;border:0.5px solid #F0997B;border-radius:var(--border-radius-md);padding:7px 11px;margin-bottom:12px;font-size:11px;color:#712B13;align-items:center;gap:7px}
+.kantei-banner.show{display:flex}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--cb);border:0.5px solid var(--cbr2);border-radius:var(--border-radius-lg);padding:9px 13px;font-size:12px;color:var(--ct);display:flex;align-items:center;gap:8px;z-index:300;transform:translateY(50px);opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 2px 12px rgba(0,0,0,0.12)}
+.toast.show{transform:translateY(0);opacity:1}
+.tic{width:20px;height:20px;border-radius:50%;background:var(--color-background-success);color:var(--color-text-success);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.tltt{position:fixed;background:var(--cb);border:0.5px solid var(--cbr2);border-radius:var(--border-radius-lg);padding:10px 13px;font-size:12px;z-index:999;pointer-events:none;display:none;max-width:260px;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+.tltt.show{display:block}
+.tttt{font-weight:500;color:var(--ct);margin-bottom:5px;font-size:13px}
+.ttr4{display:flex;gap:5px;color:var(--ct2);font-size:11px;margin-bottom:2px}
+.ttl{color:var(--ct3);min-width:28px;flex-shrink:0}
+.ttbg{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;margin-top:4px}
+.data-panel{background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.data-panel h3{font-size:12px;font-weight:500;color:var(--ct);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.data-section{margin-bottom:12px}
+.data-section:last-child{margin-bottom:0}
+.data-section-title{font-size:11px;font-weight:500;color:var(--ct2);margin-bottom:6px;padding-bottom:5px;border-bottom:0.5px solid var(--cbr)}
+.data-btns{display:flex;gap:7px;flex-wrap:wrap}
+.data-info{font-size:10px;color:var(--ct3);margin-top:5px;line-height:1.6}
+.save-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--cb2);border-radius:var(--border-radius-md);margin-bottom:4px;font-size:11px}
+.save-item-name{flex:1;color:var(--ct);font-weight:500}
+.save-item-date{color:var(--ct2);font-size:10px}
+@media print{
+  body{background:#fff;padding:0}
+  #app{display:none!important}
+  #pp-out{display:block!important}
+  .a4{margin:0;border:none;page-break-after:always;padding:13mm 15mm;box-shadow:none}
+  .a4:last-child{page-break-after:auto}
+}
+#pp-out{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="sb">
+  <div id="sbh"><h1>取材管理</h1><p>報道部 管理システム 試作２号</p></div>
+  <div style="padding-top:4px">
+    <div class="ni active" data-view="dashboard" onclick="sv(this,'dashboard')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>ダッシュボード</div>
+    <div class="ns">取材管理</div>
+    <div class="ni" data-view="units" onclick="sv(this,'units')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><circle cx="11" cy="4" r="2"/><path d="M1 13c0-2.2 1.8-4 4-4s4 1.8 4 4"/><path d="M9 13c0-2.2 1.8-4 4-4"/></svg>取材ユニット</div>
+    <div class="ni" data-view="formation" onclick="sv(this,'formation')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="3" height="3" rx="0.5"/><rect x="9" y="6" width="3" height="3" rx="0.5"/><rect x="9" y="11" width="3" height="3" rx="0.5"/><path d="M7 4h2M7 7.5h2M7 12.5h2"/></svg>ユニット編成</div>
+    <div class="ni" data-view="interviews" onclick="sv(this,'interviews')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>取材項目<span class="nbg">3</span></div>
+    <div class="ni" data-view="timeline" onclick="sv(this,'timeline')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/><rect x="4" y="2" width="3" height="4" rx="0.5"/><rect x="10" y="6" width="3" height="4" rx="0.5"/><rect x="6" y="10" width="3" height="4" rx="0.5"/></svg>タイムライン</div>
+    <div class="ni" data-view="print" onclick="sv(this,'print')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="1" width="10" height="5" rx="1"/><path d="M3 6H1v7h14V6h-2"/><rect x="3" y="9" width="10" height="6" rx="1"/><circle cx="12" cy="8" r="0.8" fill="currentColor"/></svg>印刷プレビュー</div>
+    <div class="ns">データ管理</div>
+    <div class="ni" data-view="datamanage" onclick="sv(this,'datamanage')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4" rx="6" ry="2"/><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4"/><path d="M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8"/></svg>保存・読込・CSV</div>
+    <div class="ns">勤務・連絡</div>
+    <div class="ni" data-view="shifts" onclick="sv(this,'shifts')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 8h12"/></svg>勤務管理</div>
+    <div class="ni" data-view="notifications" onclick="sv(this,'notifications')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a5 5 0 0 1 5 5v3l1 2H2l1-2V7a5 5 0 0 1 5-5z"/><path d="M6.5 13.5a1.5 1.5 0 0 0 3 0"/></svg>通知<span class="nbg">2</span></div>
+    <div class="ni" data-view="chat" onclick="sv(this,'chat')"><svg class="nii" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6l-4 2V4a1 1 0 0 1 1-1z"/></svg>チャット<span class="nbg">1</span></div>
+  </div>
+</div>
+<div id="mn">
+  <div id="tb">
+    <div id="tbt">ダッシュボード</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--ct2)">2025年3月17日（月）</span>
+      <button class="btn bts" onclick="quickSave()" style="display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3V2z"/><rect x="5" y="9" width="6" height="5"/><rect x="5" y="2" width="5" height="4"/></svg>保存</button>
+      <button class="btn btp bts" id="top-btn" onclick="openIvM()">+ 取材追加</button>
+    </div>
+  </div>
+  <div id="ct">
+    <div id="view-dashboard" class="vw active"><div class="sa">
+      <div class="sr">
+        <div class="sc"><div class="sl">稼働ユニット</div><div class="sv">8</div><div class="ss">全12組中</div></div>
+        <div class="sc"><div class="sl">本日の取材</div><div class="sv" id="d-cnt">—</div><div class="ss">官邸除く</div></div>
+        <div class="sc"><div class="sl">未割当</div><div class="sv" id="d-ua">0</div><div class="ss">担当者未定</div></div>
+        <div class="sc"><div class="sl">最終保存</div><div class="sv" style="font-size:13px" id="d-saved">—</div><div class="ss">データ管理</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--ct);margin-bottom:9px">本日の取材予定</div>
+      <div id="d-iv"></div>
+      <div style="font-size:13px;font-weight:500;color:var(--ct);margin:12px 0 9px">最新通知</div>
+      <div id="d-nf"></div>
+    </div></div>
+    <div id="view-units" class="vw"><div class="sa">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:500;color:var(--ct)">取材ユニット一覧</span>
+        <div style="display:flex;gap:7px">
+          <button class="btn bts" onclick="sv(document.querySelector('[data-view=formation]'),'formation')" style="display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h4M2 8h4M2 12h4M8 4h6M8 8h6M8 12h6"/></svg>編成を変更</button>
+          <button class="btn btp bts" onclick="openCompose(STAFF.map(s=>s.email),'【全ユニット】取材連絡','各ユニット担当者 様\n\n')" style="display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M1 5l7 5 7-5"/></svg>全員に送信</button>
+        </div>
+      </div>
+      <div class="g2" id="units-grid"></div>
+    </div></div>
+    <div id="view-formation" class="vw" style="flex-direction:column">
+      <div class="pt">
+        <span style="font-size:13px;font-weight:500;color:var(--ct)">ユニット編成</span>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ct2)">編成日：<input class="fi" id="f-fdate" type="date" value="2025-03-17" style="width:135px;padding:4px 8px;font-size:11px"></div>
+        <button class="btn bts" onclick="autoAssign()" style="display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 1 0 12 0 6 6 0 0 0-12 0z"/><path d="M8 5v3l2 2"/></svg>自動編成</button>
+        <button class="btn bts btd" onclick="clearFormation()">全クリア</button>
+        <div style="font-size:11px;color:var(--ct2);margin-left:auto">未配置：<span id="fm-free" style="font-weight:500;color:var(--ct)">0</span>名</div>
+        <button class="btn btp bts" onclick="confirmFormation()">編成を確定</button>
+      </div>
+      <div class="fm-layout">
+        <div class="fm-pool">
+          <div class="fm-pool-hdr">
+            <div class="fm-pool-hdr-top"><h3>要員リスト</h3><span id="pool-total" style="font-size:10px;color:var(--ct3)">0名</span></div>
+            <input class="search-inp" id="pool-search" placeholder="名前・役割で検索..." oninput="renderPool()">
+          </div>
+          <div class="fm-pool-body" id="pool-body"></div>
+          <div class="fm-pool-footer"><button class="btn bts" style="width:100%;display:flex;align-items:center;justify-content:center;gap:5px" onclick="openAddStaff()"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>要員を追加</button></div>
+        </div>
+        <div class="fm-units" id="fm-units"></div>
+      </div>
+      <div class="fm-status">
+        <div class="stdt"><div class="stdt-dot" style="background:#1D9E75"></div>配置済み：<span id="st-asgn">0</span>名</div>
+        <div class="stdt"><div class="stdt-dot" style="background:#EF9F27"></div>未配置：<span id="st-free">0</span>名</div>
+        <div class="stdt"><div class="stdt-dot" style="background:#E24B4A"></div>定員超：<span id="st-over">0</span>組</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--ct3)">各ユニット2名推奨 ／ 最大12組</div>
+      </div>
+    </div>
+    <div id="view-interviews" class="vw"><div class="sa">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+        <span style="font-size:13px;font-weight:500;color:var(--ct)">取材項目一覧</span>
+        <button class="btn btp bts" onclick="openIvM()">+ 新規取材</button>
+      </div>
+      <div id="iv-list"></div>
+    </div></div>
+    <div id="view-timeline" class="vw" style="flex-direction:column">
+      <div class="tlt">
+        <span class="tldl" id="tlcd">2025年3月17日（月）</span>
+        <div style="display:flex;gap:4px"><button class="btn bts" onclick="chDate(-1)">◀</button><button class="btn bts" onclick="chDate(1)">▶</button></div>
+        <div class="tltabs"><div class="tltab active" onclick="setZoom(this,1)">全体</div><div class="tltab" onclick="setZoom(this,2)">午前</div><div class="tltab" onclick="setZoom(this,3)">午後</div></div>
+        <div class="tlleg">
+          <div class="lli"><div class="lls" style="background:#FAEEDA;border:1px dashed #BA7517"></div>未割当</div>
+          <div class="lli"><div class="lls" style="background:#B4B2A9;border:0.5px solid #888780"></div>勤務</div>
+          <div class="lli"><div class="lls" style="background:#85B7EB;border:0.5px solid #378ADD"></div>取材</div>
+          <div class="lli"><div class="lls" style="background:#F0997B;border:0.5px solid #D85A30"></div>官邸</div>
+        </div>
+      </div>
+      <div class="tlb"><div class="tlg" id="tlg"></div></div>
+    </div>
+    <div id="view-print" class="vw" style="flex-direction:column">
+      <div class="pt">
+        <span style="font-size:13px;font-weight:500;color:var(--ct)">印刷プレビュー</span>
+        <div style="display:flex;align-items:center;gap:5px"><span style="font-size:11px;color:var(--ct2)">対象日：</span><input class="fi" id="p-date" type="date" style="width:138px;padding:4px 8px;font-size:11px" onchange="rPrint()"></div>
+        <button class="btn bts" onclick="setPrevDay()">前日に設定</button>
+        <div style="display:flex;align-items:center;gap:5px"><span style="font-size:11px;color:var(--ct2)">範囲：</span><select class="fi" id="p-range" style="width:150px;padding:4px 8px;font-size:11px" onchange="rPrint()"><option value="6-23">全体（6〜23時）</option><option value="6-13">午前（6〜13時）</option><option value="12-23">午後（12〜23時）</option></select></div>
+        <div style="display:flex;align-items:center;gap:5px"><span style="font-size:11px;color:var(--ct2)">行高：</span><select class="fi" id="p-minrow" style="width:130px;padding:4px 8px;font-size:11px" onchange="rPrint()"><option value="22">コンパクト</option><option value="30" selected>標準</option><option value="40">ゆったり</option></select></div>
+        <button class="btn btp bts" onclick="window.print()" style="margin-left:auto;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="1" width="10" height="5" rx="1"/><path d="M3 6H1v7h14V6h-2"/><rect x="3" y="9" width="10" height="6" rx="1"/></svg>印刷する</button>
+      </div>
+      <div class="pp" id="pp"></div>
+    </div>
+    <div id="view-datamanage" class="vw"><div class="sa">
+      <div style="font-size:13px;font-weight:500;color:var(--ct);margin-bottom:14px;display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4" rx="6" ry="2"/><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4"/><path d="M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8"/></svg>データ管理</div>
+      <div class="data-panel">
+        <h3><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3V2z"/><rect x="5" y="9" width="6" height="5"/><rect x="5" y="2" width="5" height="4"/></svg>データの保存・読込</h3>
+        <div class="data-section">
+          <div class="data-section-title">保存（JSONファイルとしてダウンロード）</div>
+          <div class="data-btns"><button class="btn btg bts" onclick="saveData()" style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>データを保存（JSONダウンロード）</button></div>
+          <div class="data-info">取材項目・ユニット編成・要員リストをすべて含んだJSONファイルを保存します。<br>ファイル名例：<code style="background:var(--cb2);padding:1px 5px;border-radius:3px;font-size:10px">hodo_20250317_1030.json</code></div>
+        </div>
+        <div class="data-section">
+          <div class="data-section-title">読込（前回保存したJSONを復元）</div>
+          <div class="data-btns"><label class="btn bts" style="cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 12V4M5 7l3-3 3 3"/><path d="M3 12h10"/></svg>JSONファイルを読込<input type="file" id="load-file" accept=".json" style="display:none" onchange="loadData(event)"></label></div>
+          <div class="data-info">保存したJSONファイルを選ぶと、すべてのデータが復元されます。</div>
+        </div>
+        <div class="data-section">
+          <div class="data-section-title">最近の保存履歴（このセッション内）</div>
+          <div id="save-history"><div style="font-size:11px;color:var(--ct3)">まだ保存されていません</div></div>
+        </div>
+      </div>
+      <div class="data-panel">
+        <h3><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M2 6h12M2 10h12M6 2v12"/></svg>CSV出力（Excelで開く）</h3>
+        <div class="data-section">
+          <div class="data-section-title">取材項目一覧をCSVで出力</div>
+          <div class="data-btns">
+            <button class="btn bts" onclick="exportCSV('all')" style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>全取材項目</button>
+            <button class="btn bts" onclick="exportCSV('today')" style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>本日分のみ</button>
+            <button class="btn bts" onclick="exportCSV('kantei')" style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>官邸の動きのみ</button>
+          </div>
+          <div class="data-info">CSVはExcelでそのまま開けます。列：日付 / 時刻 / 所要時間 / 取材名 / 場所 / 担当ユニット / 担当者 / 優先度 / 備考</div>
+        </div>
+        <div class="data-section">
+          <div class="data-section-title">要員リストをCSVで出力</div>
+          <div class="data-btns"><button class="btn bts" onclick="exportStaffCSV()" style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>要員リスト（CSV）</button></div>
+        </div>
+        <div class="data-section">
+          <div class="data-section-title">取材項目をCSVから一括登録</div>
+          <div class="data-btns"><label class="btn bts" style="cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 12V4M5 7l3-3 3 3"/><path d="M3 12h10"/></svg>CSVファイルを取込<input type="file" id="import-csv" accept=".csv" style="display:none" onchange="importCSV(event)"></label></div>
+          <div class="data-info">必須列：日付,時刻,所要時間,取材名,場所,担当ユニット,優先度,備考</div>
+        </div>
+      </div>
+    </div></div>
+    <div id="view-shifts" class="vw"><div class="sa">
+      <div style="font-size:13px;font-weight:500;color:var(--ct);margin-bottom:11px">勤務管理 — 週間スケジュール</div>
+      <div style="background:var(--cb);border:0.5px solid var(--cbr);border-radius:var(--border-radius-lg);overflow:auto"><table class="sht"><thead><tr><th style="min-width:88px">ユニット</th><th>月 3/17</th><th>火 3/18</th><th>水 3/19</th><th>木 3/20</th><th>金 3/21</th><th>土 3/22</th><th>日 3/23</th></tr></thead><tbody id="sh-tbody"></tbody></table></div>
+    </div></div>
+    <div id="view-notifications" class="vw"><div class="sa">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px"><span style="font-size:13px;font-weight:500;color:var(--ct)">通知センター</span><button class="btn bts" onclick="markAllRead()">すべて既読</button></div>
+      <div id="nf-list"></div>
+    </div></div>
+    <div id="view-chat" class="vw"><div class="cw">
+      <div class="cl" id="chat-list"></div>
+      <div class="ca2">
+        <div class="ch2"><div class="cav3" id="c-av">U1</div><span id="c-name">ユニット 1</span></div>
+        <div class="cm" id="c-msgs"></div>
+        <div class="cia"><input class="ci" id="c-inp" placeholder="メッセージを入力..." onkeydown="if(event.key==='Enter')sendMsg()"><button class="sndb" onclick="sendMsg()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2"><path d="M2 8l12-6-6 12V9L2 8z"/></svg></button></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+</div>
+
+<!-- Modals -->
+<div class="mo" id="em-modal"><div class="md"><div class="mdh"><h2>メール送信</h2><button class="xb" onclick="closeEM()">✕</button></div><div class="fg"><label class="fl">宛先</label><div class="to-field" id="to-field"></div></div><div class="fg"><label class="fl">件名</label><input class="fi" id="em-sub"></div><div class="fg"><label class="fl">本文</label><textarea class="fi" id="em-body"></textarea></div><div class="mf"><span style="font-size:11px;color:var(--ct3)">Gmailで開いて送信します</span><div style="display:flex;gap:7px"><button class="btn bts" onclick="closeEM()">キャンセル</button><button class="btn btp bts" onclick="doSend()">Gmailで送信</button></div></div></div></div>
+
+<div class="mo" id="iv-modal"><div class="md" style="width:460px"><div class="mdh"><h2 id="iv-modal-title">新規取材項目</h2><button class="xb" onclick="closeIvM()">✕</button></div>
+<div class="type-toggle"><div class="type-opt t-normal"><input type="radio" name="iv-type" id="t-normal" value="normal" checked onchange="switchIvType('normal')"><label for="t-normal"><div class="type-dot" style="background:#378ADD"></div>通常取材</label></div><div class="type-opt t-kantei"><input type="radio" name="iv-type" id="t-kantei" value="kantei" onchange="switchIvType('kantei')"><label for="t-kantei"><div class="type-dot" style="background:#D85A30"></div>官邸の動き</label></div></div>
+<div class="kantei-banner" id="kantei-banner"><span style="font-size:14px;flex-shrink:0">🏛</span><span>官邸取材モードです。タイトルと場所は自動設定されます。</span></div>
+<div class="fg"><label class="fl">取材タイトル</label><input class="fi" id="f-title" placeholder="取材タイトルを入力"></div>
+<div class="frow"><div class="fg" style="flex:1"><label class="fl">日付</label><input class="fi" id="f-date" type="date"></div><div class="fg" style="flex:1"><label class="fl">開始時刻</label><input class="fi" id="f-time" type="time"></div><div class="fg" style="flex:1"><label class="fl">所要時間（分）</label><input class="fi" id="f-dur" type="number" value="60" min="15" step="15"></div></div>
+<div class="fg"><label class="fl">場所</label><input class="fi" id="f-place" placeholder="例：東京都庁 本庁舎2F"></div>
+<div class="frow"><div class="fg" style="flex:1"><label class="fl">担当ユニット</label><select class="fi" id="f-unit"><option value="">-- 未割当 --</option></select></div><div class="fg" style="flex:1"><label class="fl">優先度</label><select class="fi" id="f-priority"><option value="high">高</option><option value="med" selected>中</option><option value="low">低</option></select></div></div>
+<div class="fg"><label class="fl">備考</label><textarea class="fi" id="f-note" style="min-height:55px"></textarea></div>
+<div class="mf"><button class="btn bts" onclick="closeIvM()">キャンセル</button><button class="btn btp bts" id="iv-submit-btn" onclick="addIv()">登録</button></div></div></div>
+
+<div class="mo" id="as-modal"><div class="md" style="width:320px"><div class="mdh"><h2>担当ユニットを割り当て</h2><button class="xb" onclick="closeAs()">✕</button></div><div style="font-size:13px;color:var(--ct);margin-bottom:12px;font-weight:500" id="as-title"></div><div class="fg"><label class="fl">担当ユニット</label><select class="fi" id="as-unit"><option value="">-- 未割当のまま --</option></select></div><div class="mf"><button class="btn bts" onclick="closeAs()">キャンセル</button><button class="btn btp bts" onclick="doAssign()">割り当て</button></div></div></div>
+
+<div class="mo" id="staff-modal"><div class="md" style="width:400px"><div class="mdh"><h2>要員を追加</h2><button class="xb" onclick="closeAddStaff()">✕</button></div><div class="frow"><div class="fg" style="flex:1"><label class="fl">氏名</label><input class="fi" id="ns-name" placeholder="山田 太郎"></div><div class="fg" style="flex:1"><label class="fl">読み</label><input class="fi" id="ns-kana" placeholder="やまだ たろう"></div></div><div class="frow"><div class="fg" style="flex:1"><label class="fl">役割</label><select class="fi" id="ns-role"><option>記者</option><option>カメラ</option><option>音声</option><option>ディレクター</option><option>デスク</option></select></div><div class="fg" style="flex:1"><label class="fl">メール</label><input class="fi" id="ns-email" placeholder="yamada@hodo.example.com"></div></div><div class="fg"><label class="fl">アバター色</label><div style="display:flex;gap:7px;flex-wrap:wrap" id="color-picker"></div></div><div class="mf"><button class="btn bts" onclick="closeAddStaff()">キャンセル</button><button class="btn btp bts" onclick="addStaff()">追加</button></div></div></div>
+
+<div class="toast" id="toast"><div class="tic" id="toast-ic">✓</div><span id="toast-msg"></span></div>
+<div class="tltt" id="tltt"><div class="tttt" id="tt-title"></div><div class="ttr4"><span class="ttl">時刻</span><span id="tt-time"></span></div><div class="ttr4"><span class="ttl">場所</span><span id="tt-place"></span></div><div class="ttr4"><span class="ttl">担当</span><span id="tt-unit"></span></div><div class="ttr4" id="tt-nrow"><span class="ttl">備考</span><span id="tt-note"></span></div><div><span class="ttbg" id="tt-badge"></span></div><div id="tt-hint" style="margin-top:5px;font-size:10px;color:#BA7517;display:none">クリックで担当を割り当て</div></div>
+<div id="pp-out"></div>
+
+<script>
+const AV_COLS=[{bg:'#E6F1FB',tc:'#185FA5'},{bg:'#E1F5EE',tc:'#0F6E56'},{bg:'#FAEEDA',tc:'#854F0B'},{bg:'#FAECE7',tc:'#993C1D'},{bg:'#EEEDFE',tc:'#534AB7'},{bg:'#FBEAF0',tc:'#993556'},{bg:'#EAF3DE',tc:'#3B6D11'},{bg:'#FCEBEB',tc:'#A32D2D'}];
+let selColor=0;
+let STAFF=[
+  {id:1,name:'田中 健',kana:'たなか けん',role:'記者',email:'tanaka.ken@hodo.example.com',col:AV_COLS[0],init:'田'},
+  {id:2,name:'鈴木 奈央',kana:'すずき なお',role:'カメラ',email:'suzuki.nao@hodo.example.com',col:AV_COLS[1],init:'鈴'},
+  {id:3,name:'山田 浩',kana:'やまだ ひろし',role:'記者',email:'yamada.hiroshi@hodo.example.com',col:AV_COLS[2],init:'山'},
+  {id:4,name:'佐藤 明',kana:'さとう あきら',role:'カメラ',email:'sato.akira@hodo.example.com',col:AV_COLS[3],init:'佐'},
+  {id:5,name:'伊藤 恵',kana:'いとう めぐみ',role:'記者',email:'ito.megumi@hodo.example.com',col:AV_COLS[4],init:'伊'},
+  {id:6,name:'渡辺 光',kana:'わたなべ ひかる',role:'カメラ',email:'watanabe.hikaru@hodo.example.com',col:AV_COLS[5],init:'渡'},
+  {id:7,name:'中村 勝',kana:'なかむら かつ',role:'記者',email:'nakamura.katsu@hodo.example.com',col:AV_COLS[6],init:'中'},
+  {id:8,name:'小林 あい',kana:'こばやし あい',role:'カメラ',email:'kobayashi.ai@hodo.example.com',col:AV_COLS[0],init:'小'},
+  {id:9,name:'加藤 誠',kana:'かとう まこと',role:'記者',email:'kato.makoto@hodo.example.com',col:AV_COLS[2],init:'加'},
+  {id:10,name:'吉田 麻',kana:'よしだ ま',role:'カメラ',email:'yoshida.ma@hodo.example.com',col:AV_COLS[1],init:'吉'},
+  {id:11,name:'山口 博',kana:'やまぐち ひろし',role:'記者',email:'yamaguchi.hiroshi@hodo.example.com',col:AV_COLS[3],init:'山'},
+  {id:12,name:'松本 玲',kana:'まつもと れい',role:'カメラ',email:'matsumoto.rei@hodo.example.com',col:AV_COLS[4],init:'松'},
+  {id:13,name:'井上 龍',kana:'いのうえ りゅう',role:'記者',email:'inoue.ryu@hodo.example.com',col:AV_COLS[0],init:'井'},
+  {id:14,name:'木村 由',kana:'きむら ゆ',role:'カメラ',email:'kimura.yu@hodo.example.com',col:AV_COLS[6],init:'木'},
+  {id:15,name:'清水 徹',kana:'しみず とおる',role:'記者',email:'shimizu.toru@hodo.example.com',col:AV_COLS[5],init:'清'},
+  {id:16,name:'橋本 希',kana:'はしもと のぞみ',role:'カメラ',email:'hashimoto.nozomi@hodo.example.com',col:AV_COLS[2],init:'橋'},
+  {id:17,name:'石川 勇',kana:'いしかわ いさむ',role:'記者',email:'ishikawa.isamu@hodo.example.com',col:AV_COLS[1],init:'石'},
+  {id:18,name:'前田 桜',kana:'まえだ さくら',role:'カメラ',email:'maeda.sakura@hodo.example.com',col:AV_COLS[4],init:'前'},
+  {id:19,name:'藤田 武',kana:'ふじた たけし',role:'記者',email:'fujita.takeshi@hodo.example.com',col:AV_COLS[3],init:'藤'},
+  {id:20,name:'後藤 凛',kana:'ごとう りん',role:'カメラ',email:'goto.rin@hodo.example.com',col:AV_COLS[0],init:'後'},
+  {id:21,name:'西村 聡',kana:'にしむら さとし',role:'記者',email:'nishimura.satoshi@hodo.example.com',col:AV_COLS[6],init:'西'},
+  {id:22,name:'岡田 奏',kana:'おかだ かなで',role:'カメラ',email:'okada.kanade@hodo.example.com',col:AV_COLS[2],init:'岡'},
+  {id:23,name:'三浦 剛',kana:'みうら ごう',role:'記者',email:'miura.go@hodo.example.com',col:AV_COLS[5],init:'三'},
+  {id:24,name:'坂本 英',kana:'さかもと えい',role:'カメラ',email:'sakamoto.ei@hodo.example.com',col:AV_COLS[1],init:'坂'},
+];
+let nextSid=25;
+let UNITS=Array.from({length:12},(_,i)=>({n:i+1,members:[],status:'active',task:'待機中'}));
+[[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[19,20],[21,22],[23,24]].forEach(([a,b],i)=>{UNITS[i].members=[a,b];});
+UNITS[0].task='都庁記者会見取材中';UNITS[1].task='取材完了・帰社中';UNITS[4].status='busy';UNITS[4].task='取材場所変更対応中';
+const DS=[7,8,7,9,8,7,9,8,7,8,9,7];
+const KC=['#C85A00','#A03A00','#7d3c00','#5a2a00','#3d1c00','#8b4400'];
+function getStaff(id){return STAFF.find(s=>s.id===id);}
+function unitOfStaff(sid){return UNITS.find(u=>u.members.includes(sid));}
+let IVS=[
+  {id:1,title:'都庁記者会見',date:'2025-03-17',time:'10:00',dur:60,place:'東京都庁 本庁舎2F',unit:'ユニット 1',priority:'high',note:'都知事出席予定。三脚持参のこと。'},
+  {id:2,title:'経済産業省ブリーフィング',date:'2025-03-17',time:'14:30',dur:90,place:'霞が関・経産省',unit:'ユニット 3',priority:'med',note:'資料配布あり。'},
+  {id:3,title:'都市再開発 現場レポート',date:'2025-03-17',time:'16:00',dur:45,place:'渋谷区 再開発エリア',unit:'ユニット 8',priority:'low',note:'ヘルメット着用必須。'},
+  {id:6,title:'朝のブリーフィング',date:'2025-03-17',time:'08:30',dur:30,place:'本社 会議室A',unit:'ユニット 2',priority:'low',note:''},
+  {id:7,title:'市役所取材',date:'2025-03-17',time:'11:30',dur:60,place:'新宿区役所',unit:'ユニット 4',priority:'med',note:'担当者と要事前連絡。'},
+  {id:8,title:'夕方特集ロケ',date:'2025-03-17',time:'15:00',dur:120,place:'お台場 海浜公園',unit:'ユニット 11',priority:'high',note:'機材リスト確認。'},
+  {id:9,title:'スポーツ現場中継',date:'2025-03-17',time:'13:00',dur:90,place:'国立競技場',unit:'ユニット 6',priority:'high',note:'中継車手配済み。'},
+  {id:10,title:'記者会見 — 新製品',date:'2025-03-17',time:'10:30',dur:45,place:'品川プリンスホテル',unit:'ユニット 7',priority:'med',note:''},
+  {id:11,title:'インタビュー収録',date:'2025-03-17',time:'09:00',dur:60,place:'本社 スタジオB',unit:'ユニット 10',priority:'med',note:'メイク時間含む。'},
+  {id:12,title:'官邸の動き',date:'2025-03-17',time:'08:00',dur:90,place:'首相官邸',unit:'ユニット 1',priority:'high',note:'官房長官会見あり。'},
+  {id:13,title:'官邸の動き',date:'2025-03-17',time:'09:00',dur:180,place:'首相官邸',unit:'ユニット 2',priority:'high',note:'朝イチから常駐。'},
+  {id:14,title:'官邸の動き',date:'2025-03-17',time:'14:00',dur:90,place:'首相官邸',unit:'ユニット 5',priority:'high',note:'総理動静待機。'},
+  {id:15,title:'官邸の動き',date:'2025-03-17',time:'11:00',dur:120,place:'首相官邸',unit:'ユニット 3',priority:'high',note:'昼の記者ブリーフィング。'},
+  {id:16,title:'夜間取材 — 事件現場',date:'2025-03-17',time:'19:00',dur:60,place:'港区 現場',unit:'ユニット 5',priority:'high',note:'警察発表後に移動。'},
+  {id:17,title:'新薬発表会見',date:'2025-03-17',time:'13:30',dur:60,place:'帝国ホテル 鶴の間',unit:'',priority:'high',note:'製薬会社主催。'},
+  {id:18,title:'渋谷区長インタビュー',date:'2025-03-17',time:'10:00',dur:30,place:'渋谷区役所 区長室',unit:'',priority:'med',note:'事前質問票送付済み。'},
+];
+let nid=19;
+const NOTIFS=[
+  {id:1,icon:'⚠',bg:'#fff8e1',text:'ユニット5 — 取材場所が変更されました',sub:'加藤・吉田ユニット より',time:'10分前',read:false},
+  {id:2,icon:'📋',bg:'#e8f0fe',text:'ユニット2 — 取材完了レポートが提出されました',sub:'山田・佐藤ユニット より',time:'32分前',read:false},
+  {id:3,icon:'📍',bg:'#e6f9f0',text:'ユニット7 — 新規取材地点が登録されました',sub:'システム通知',time:'1時間前',read:true},
+  {id:4,icon:'👤',bg:'#f5f5f5',text:'未割当取材が2件あります',sub:'システム通知',time:'2時間前',read:true},
+];
+const CHATS=[
+  {id:1,name:'ユニット 1',sub:'田中・鈴木',init:'U1',online:true,msgs:[{fr:true,name:'田中',text:'都庁会見、予定通り進行中です。',time:'10:12'},{fr:false,text:'了解。映像確認はできていますか？',time:'10:14'},{fr:true,name:'田中',text:'問題ありません。15分後に終了予定です。',time:'10:15'}]},
+  {id:2,name:'ユニット 3',sub:'伊藤・渡辺',init:'U3',online:true,msgs:[{fr:true,name:'伊藤',text:'経産省、入館確認取れました。',time:'13:45'}]},
+  {id:3,name:'全体連絡',sub:'全ユニット',init:'全',online:true,msgs:[{fr:true,name:'デスク',text:'本日の夕方放送の尺が変更になりました。',time:'08:30'}]},
+];
+let aCid=1,tlD='2025-03-17',tlZ=1,eRcps=[],asId=null,curIvType='normal';
+let dragSid=null,dragFromUnit=null,saveHistory=[];
+
+function toMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function fmtT(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function isK(iv){return iv.title==='官邸の動き';}
+function isUA(iv){return !iv.unit||iv.unit==='';}
+function nowStr(){const n=new Date();return`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}_${String(n.getHours()).padStart(2,'0')}${String(n.getMinutes()).padStart(2,'0')}`;}
+function nowLabel(){const n=new Date();return`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+function showToast(msg,ic='✓'){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-ic').textContent=ic;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+function buildSnapshot(){return{version:1,savedAt:new Date().toISOString(),IVS,UNITS:UNITS.map(u=>({...u})),STAFF:STAFF.map(s=>({...s,col:{bg:s.col.bg,tc:s.col.tc}})),nextIds:{nid,nextSid}};}
+function saveData(){const snap=buildSnapshot();const blob=new Blob([JSON.stringify(snap,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const label=`hodo_${nowStr()}.json`;a.download=label;a.click();URL.revokeObjectURL(a.href);saveHistory.unshift({name:label,time:nowLabel()});if(saveHistory.length>5)saveHistory.pop();renderSaveHistory();const el=document.getElementById('d-saved');if(el)el.textContent=nowLabel();showToast('保存しました — '+label);}
+function quickSave(){saveData();}
+function loadData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const snap=JSON.parse(ev.target.result);if(!snap.IVS||!snap.UNITS||!snap.STAFF)throw new Error('形式エラー');IVS=snap.IVS;UNITS=snap.UNITS;STAFF=snap.STAFF.map(s=>({...s,col:AV_COLS.find(c=>c.bg===s.col?.bg)||AV_COLS[0]}));if(snap.nextIds){nid=snap.nextIds.nid||nid;nextSid=snap.nextIds.nextSid||nextSid;}const cur=document.querySelector('.ni.active');if(cur){const v=cur.getAttribute('data-view');if(v==='dashboard')rDash();if(v==='units')rUnits();if(v==='interviews')rIvs();if(v==='timeline')rTl();}renderSaveHistory();showToast(`「${file.name}」を読み込みました`);}catch(err){showToast('読込エラー：正しいJSONファイルを選んでください','!');}};reader.readAsText(file);e.target.value='';}
+function renderSaveHistory(){const el=document.getElementById('save-history');if(!el)return;if(saveHistory.length===0){el.innerHTML='<div style="font-size:11px;color:var(--ct3)">まだ保存されていません</div>';return;}el.innerHTML=saveHistory.map(s=>`<div class="save-item"><span class="save-item-name">${s.name}</span><span class="save-item-date">${s.time}</span></div>`).join('');}
+function exportCSV(mode){let rows=IVS;if(mode==='today')rows=IVS.filter(iv=>iv.date===tlD);if(mode==='kantei')rows=IVS.filter(iv=>isK(iv));const header='日付,時刻,所要時間(分),取材名,場所,担当ユニット,担当者,優先度,備考\n';const pn={high:'高',med:'中',low:'低'};const body=rows.map(iv=>{const u=UNITS.find(x=>`ユニット ${x.n}`===iv.unit);const members=u?u.members.map(id=>getStaff(id)?.name).join('・'):'未割当';return[iv.date,iv.time,iv.dur,`"${iv.title}"`,`"${iv.place}"`,iv.unit||'未割当',`"${members}"`,pn[iv.priority]||'中',`"${(iv.note||'').replace(/"/g,'""')}"`].join(',');}).join('\n');const bom='\uFEFF';const blob=new Blob([bom+header+body],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');const label=mode==='all'?'all':mode==='today'?tlD:'kantei';a.href=URL.createObjectURL(blob);a.download=`hodo_iv_${label}_${nowStr()}.csv`;a.click();URL.revokeObjectURL(a.href);showToast(`CSV出力完了（${rows.length}件）`);}
+function exportStaffCSV(){const header='氏名,読み,役割,メール,所属ユニット\n';const body=STAFF.map(s=>{const u=unitOfStaff(s.id);return[`"${s.name}"`,`"${s.kana||''}"`,s.role,s.email,u?`ユニット ${u.n}`:'未配置'].join(',');}).join('\n');const bom='\uFEFF';const blob=new Blob([bom+header+body],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`hodo_staff_${nowStr()}.csv`;a.click();URL.revokeObjectURL(a.href);showToast(`要員リストCSV出力（${STAFF.length}名）`);}
+function importCSV(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const lines=ev.target.result.replace(/^\uFEFF/,'').split('\n').filter(l=>l.trim());if(lines.length<2){showToast('CSVが空または形式エラー','!');return;}let imported=0;lines.slice(1).forEach(line=>{const cols=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur.trim());cur='';}else{cur+=c;}}cols.push(cur.trim());if(cols.length<4)return;const[date,time,durS,title,place,unit,,priority,note]=cols;if(!title||!date||!time)return;IVS.push({id:nid++,title:title.replace(/^"|"$/g,''),date,time,dur:parseInt(durS)||60,place:(place||'').replace(/^"|"$/g,''),unit:unit||'',priority:priority==='高'?'high':priority==='低'?'low':'med',note:(note||'').replace(/^"|"$/g,'')});imported++;});const cur=document.querySelector('.ni.active');if(cur&&cur.getAttribute('data-view')==='interviews')rIvs();showToast(`${imported}件の取材項目を取込みました`);};reader.readAsText(file,'UTF-8');e.target.value='';}
+
+function openCompose(addrs,sub,body){eRcps=[...new Set(addrs.filter(Boolean))];rfTF();document.getElementById('em-sub').value=sub||'';document.getElementById('em-body').value=body||'';document.getElementById('em-modal').classList.add('open');}
+function openUnitEmail(n){const u=UNITS.find(x=>x.n===n);if(!u)return;openCompose(u.members.map(id=>getStaff(id)?.email).filter(Boolean),`【ユニット${n}】取材連絡`,`ユニット${n} 担当者 様\n\n`);}
+function openMemberEmail(email,name){openCompose([email],`【取材連絡】${name}`,`${name} 様\n\n`);}
+function rfTF(){document.getElementById('to-field').innerHTML=eRcps.map((a,i)=>`<span class="tt3">${a}<span class="ttr3" onclick="rmRcp(${i})">×</span></span>`).join('');}
+function rmRcp(i){eRcps.splice(i,1);rfTF();}
+function closeEM(){document.getElementById('em-modal').classList.remove('open');}
+function doSend(){window.open(`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(eRcps.join(','))}&su=${encodeURIComponent(document.getElementById('em-sub').value)}&body=${encodeURIComponent(document.getElementById('em-body').value)}`,'_blank');closeEM();showToast(`Gmailを開きました`);}
+
+function openAs(id){asId=id;const iv=IVS.find(x=>x.id===id);document.getElementById('as-title').textContent=iv.title;const sel=document.getElementById('as-unit');sel.innerHTML='<option value="">-- 未割当のまま --</option>'+UNITS.map(u=>`<option value="ユニット ${u.n}" ${iv.unit===`ユニット ${u.n}`?'selected':''}>${u.n}班 ${u.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・')}</option>`).join('');document.getElementById('as-modal').classList.add('open');}
+function closeAs(){document.getElementById('as-modal').classList.remove('open');asId=null;}
+function doAssign(){const val=document.getElementById('as-unit').value;if(asId!==null){const iv=IVS.find(x=>x.id===asId);if(iv){iv.unit=val;showToast(val?`${val}に割り当てました`:'未割当に戻しました');}}closeAs();const cur=document.querySelector('.ni.active');if(cur){const v=cur.getAttribute('data-view');if(v==='timeline')rTl();if(v==='interviews')rIvs();if(v==='dashboard')rDash();}}
+
+function sv(el,v){document.querySelectorAll('.vw').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+v).classList.add('active');el.classList.add('active');const T={dashboard:'ダッシュボード',units:'取材ユニット',formation:'ユニット編成',interviews:'取材項目',timeline:'タイムライン',print:'印刷プレビュー',datamanage:'データ管理',shifts:'勤務管理',notifications:'通知センター',chat:'チャット'};document.getElementById('tbt').textContent=T[v]||v;document.getElementById('top-btn').style.display=(v==='formation'||v==='datamanage')?'none':'inline-flex';if(v==='dashboard')rDash();if(v==='units')rUnits();if(v==='formation')rFormation();if(v==='interviews')rIvs();if(v==='timeline')rTl();if(v==='print')rPrint();if(v==='datamanage')renderSaveHistory();if(v==='shifts')rShifts();if(v==='notifications')rNotifs();if(v==='chat')rChat();}
+
+function rDash(){const today=IVS.filter(iv=>iv.date===tlD),ua=today.filter(iv=>isUA(iv)).length,norm=today.filter(iv=>!isK(iv));document.getElementById('d-cnt').textContent=norm.length;document.getElementById('d-ua').textContent=ua;document.getElementById('d-ua').style.color=ua>0?'#D85A30':'var(--ct)';document.getElementById('d-iv').innerHTML=today.slice(0,4).map(iv=>`<div class="ic" style="margin-bottom:7px${isUA(iv)?';border-left:2px solid #BA7517':''}"><div class="itb"><div class="itm">${iv.time}</div><div class="id2">${iv.date.slice(5).replace('-','/')}</div></div><div><div class="iti">${iv.title}${isUA(iv)?'<span class="uab2">未割当</span>':''}</div><div class="imt"><span>📍 ${iv.place}</span></div><div style="margin-top:3px"><span class="iu">${isUA(iv)?'担当未定':iv.unit}</span></div></div></div>`).join('');document.getElementById('d-nf').innerHTML=NOTIFS.slice(0,3).map(n=>`<div class="nfi ${n.read?'':'unread'}" style="margin-bottom:6px"><div class="nfic" style="background:${n.bg}">${n.icon}</div><div style="flex:1"><div class="nft">${n.text}</div><div class="nfs">${n.sub}</div></div><div class="nftm">${n.time}</div></div>`).join('');}
+function rUnits(){const sc={active:'sa2',standby:'ss2',busy:'sb2'},st={active:'稼働中',standby:'待機中',busy:'対応中'};document.getElementById('units-grid').innerHTML=UNITS.map(u=>{const mems=u.members.map(id=>getStaff(id)).filter(Boolean);return`<div class="uc"><div class="uh"><span class="unl">ユニット ${u.n}</span><span class="ust ${sc[u.status||'standby']}">${st[u.status||'standby']}</span></div><div class="umems">${mems.length?mems.map(m=>`<div style="flex:1;display:flex;gap:7px;align-items:flex-start;min-width:0"><div class="mav" style="background:${m.col.bg};color:${m.col.tc}">${m.init}</div><div style="min-width:0"><div class="mn2">${m.name}</div><div class="mr2">${m.role}</div><div class="me" onclick="openMemberEmail('${m.email}','${m.name}')">${m.email.split('@')[0]}@...</div></div></div>`).join(''):'<div style="font-size:11px;color:var(--ct3);padding:4px 0">要員未配置</div>'}</div><div class="ut">📌 ${u.task||'待機中'}</div><div class="uer"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--ct3)" stroke-width="1.5" style="flex-shrink:0"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M1 5l7 5 7-5"/></svg><span class="uea">unit${u.n}@hodo.example.com</span><button class="btn bts" onclick="openUnitEmail(${u.n})" style="padding:2px 8px;font-size:10px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8l12-6-6 12V9L2 8z"/></svg>送信</button></div></div>`;}).join('');}
+function rIvs(){const pn={high:'高',med:'中',low:'低'},pc={high:'ph',med:'pm',low:'pl'};document.getElementById('iv-list').innerHTML=[...IVS].sort((a,b)=>a.time.localeCompare(b.time)).map(iv=>`<div class="ic${isUA(iv)?'" style="border-left:2px solid #BA7517':'"'}"><div class="itb"><div class="itm">${iv.time}</div><div class="id2">${iv.date.slice(5).replace('-','/')}</div></div><div style="flex:1"><div class="iti">${iv.title}${isK(iv)?'<span class="ktag">官邸</span>':''}${isUA(iv)?'<span class="uab2">未割当</span>':''}</div><div class="imt"><span>📍 ${iv.place}</span><span>⏱ ${iv.dur}分</span></div>${iv.note?`<div class="ino">${iv.note}</div>`:''}<div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="iu" onclick="${isUA(iv)?`openAs(${iv.id})`:`mailFromIv('${iv.unit}')`}">${isUA(iv)?'👉 担当を割り当て':iv.unit+' ✉'}</span><span style="font-size:11px;color:var(--ct2);display:flex;align-items:center;gap:3px"><span class="pd ${pc[iv.priority]}"></span>優先度:${pn[iv.priority]}</span></div></div></div>`).join('');}
+function mailFromIv(un){const n=parseInt(un.replace('ユニット ',''));if(!isNaN(n))openUnitEmail(n);}
+
+function switchIvType(type){curIvType=type;const isKantei=(type==='kantei');const tEl=document.getElementById('f-title'),pEl=document.getElementById('f-place'),bn=document.getElementById('kantei-banner'),sb=document.getElementById('iv-submit-btn'),pr=document.getElementById('f-priority'),mt=document.getElementById('iv-modal-title');if(isKantei){tEl.value='官邸の動き';tEl.disabled=true;tEl.classList.add('kf');if(!pEl.value||pEl.value==='首相官邸')pEl.value='首相官邸';pEl.classList.add('kf');pr.value='high';bn.classList.add('show');sb.className='btn btn-kantei bts';sb.textContent='官邸取材として登録';mt.textContent='官邸の動き — 新規登録';}else{tEl.value='';tEl.disabled=false;tEl.classList.remove('kf');if(pEl.value==='首相官邸')pEl.value='';pEl.classList.remove('kf');bn.classList.remove('show');sb.className='btn btp bts';sb.textContent='登録';mt.textContent='新規取材項目';}}
+function openIvM(){curIvType='normal';document.getElementById('t-normal').checked=true;switchIvType('normal');const sel=document.getElementById('f-unit');sel.innerHTML='<option value="">-- 未割当 --</option>'+UNITS.map(u=>`<option>ユニット ${u.n}</option>`).join('');document.getElementById('f-date').value=tlD;document.getElementById('f-time').value='10:00';document.getElementById('f-dur').value='60';['f-place','f-note'].forEach(id=>document.getElementById(id).value='');document.getElementById('iv-modal').classList.add('open');}
+function closeIvM(){document.getElementById('iv-modal').classList.remove('open');}
+function addIv(){const title=document.getElementById('f-title').value.trim();if(!title)return;const iv={id:nid++,title,date:document.getElementById('f-date').value,time:document.getElementById('f-time').value,dur:parseInt(document.getElementById('f-dur').value)||60,place:document.getElementById('f-place').value||'未設定',unit:document.getElementById('f-unit').value,priority:document.getElementById('f-priority').value,note:document.getElementById('f-note').value};IVS.push(iv);closeIvM();showToast(`「${title}」を登録しました`);NOTIFS.unshift({id:Date.now(),icon:curIvType==='kantei'?'🏛':'📋',bg:curIvType==='kantei'?'#FAECE7':'#e8f0fe',text:`新規取材「${title}」が登録されました`,sub:'あなた より',time:'たった今',read:false});const cur=document.querySelector('.ni.active');if(cur){const v=cur.getAttribute('data-view');if(v==='timeline')rTl();if(v==='interviews')rIvs();if(v==='dashboard')rDash();}}
+
+function gZR(){if(tlZ===2)return{s:6,e:13};if(tlZ===3)return{s:12,e:22};return{s:6,e:22};}
+function rTl(){const{s,e}=gZR(),hrs=[];for(let h=s;h<=e;h++)hrs.push(h);const dIvs=IVS.filter(iv=>iv.date===tlD),uaIvs=dIvs.filter(iv=>isUA(iv)),rs=s*60,re=e*60;let html='<div class="tlhd"><div class="tlc">ユニット</div><div class="tlhh">';hrs.forEach(h=>{html+=`<div class="tlhc">${h}:00</div>`;});html+='</div></div>';html+=`<div class="tug tug-ua"><div style="display:flex"><div style="width:116px;flex-shrink:0;border-right:0.5px solid rgba(0,0,0,0.25);padding:6px 8px;background:#f5f5f5;display:flex;flex-direction:column;justify-content:center"><div style="font-size:11px;font-weight:500;color:#633806">未割当</div><div style="font-size:10px;color:#854F0B">${uaIvs.length}件</div></div><div style="flex:1;position:relative;background:#f5f5f5"><div style="position:absolute;inset:0;pointer-events:none">`;hrs.forEach(h=>{const lp=((h-s)/(e-s)*100).toFixed(3);html+=`<div class="vl" style="left:${lp}%"></div>`;});html+=`</div><div style="height:28px;position:relative">`;uaIvs.forEach(iv=>{const sm=toMin(iv.time),cs=Math.max(sm,rs),ce=Math.min(sm+iv.dur,re);if(cs>=re||ce<=rs)return;const lp=((cs-rs)/(re-rs)*100).toFixed(3),wp=((ce-cs)/(re-rs)*100).toFixed(3);html+=`<div class="uab3" style="left:${lp}%;width:${wp}%" onmouseenter="showTT(event,${iv.id},true)" onmouseleave="hideTT()" onclick="openAs(${iv.id})"><span class="uab3-t">${iv.title}</span></div>`;});html+=`</div></div></div></div>`;UNITS.forEach((u,ui)=>{const uIvs=dIvs.filter(iv=>iv.unit===`ユニット ${u.n}`),nIvs=uIvs.filter(iv=>!isK(iv)),kIvs=uIvs.filter(iv=>isK(iv));const ds2=DS[ui],de=ds2+8.5;const m0=u.members.length?getStaff(u.members[0]):null;html+=`<div class="tug"><div style="display:flex"><div style="width:116px;flex-shrink:0;border-right:0.5px solid var(--cbr);padding:4px 8px;display:flex;flex-direction:column;justify-content:center"><div class="unt2">ユニット ${u.n}</div>${m0?`<div class="uns2"><span class="unav2" style="background:${m0.col.bg};color:${m0.col.tc}">${m0.init}</span><span>${m0.name.split(' ')[0]}</span></div>`:''}</div><div style="flex:1;display:flex;flex-direction:column;position:relative"><div style="position:absolute;inset:0;pointer-events:none">`;hrs.forEach(h=>{const lp=((h-s)/(e-s)*100).toFixed(3);html+=`<div class="vl" style="left:${lp}%"></div>`;});html+=`</div>`;function blk(sm,dur,cls,sty,txt,id){const em=sm+dur,cs=Math.max(sm,rs),ce=Math.min(em,re);if(cs>=re||ce<=rs)return'';const lp=((cs-rs)/(re-rs)*100).toFixed(3),wp=((ce-cs)/(re-rs)*100).toFixed(3);return`<div class="${cls}" style="left:${lp}%;width:${wp}%;${sty}" onmouseenter="showTT(event,${id},false)" onmouseleave="hideTT()" onclick="jumpIv(${id})"><span class="${cls}-t">${txt}</span></div>`;}html+=`<div class="ln"><div class="lnl">勤務</div>`;const cs2=Math.max(ds2*60,rs),ce2=Math.min(de*60,re);if(cs2<ce2){const lp=((cs2-rs)/(re-rs)*100).toFixed(3),wp=((ce2-cs2)/(re-rs)*100).toFixed(3);html+=`<div class="db" style="left:${lp}%;width:${wp}%"></div>`;}html+=`</div><div class="ln" style="border-top:0.5px solid var(--cbr)"><div class="lnl">取材</div>`;nIvs.forEach(iv=>{html+=blk(toMin(iv.time),iv.dur,'ivb','background:#DDEEFF;border:1px solid #378ADD',iv.title,iv.id);});html+=`</div><div class="ln" style="border-top:0.5px solid var(--cbr)"><div class="lnl" style="color:#993C1D">官邸</div>`;kIvs.forEach(iv=>{html+=blk(toMin(iv.time),iv.dur,'kb','background:#FAECE7;border:1px solid #D85A30',iv.title,iv.id);});html+=`</div></div></div></div>`;});document.getElementById('tlg').innerHTML=html;const days=['日','月','火','水','木','金','土'],d=new Date(tlD);document.getElementById('tlcd').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;}
+function setZoom(el,z){tlZ=z;document.querySelectorAll('.tltab').forEach(t=>t.classList.remove('active'));el.classList.add('active');rTl();}
+function chDate(d2){const dt=new Date(tlD);dt.setDate(dt.getDate()+d2);tlD=dt.toISOString().split('T')[0];rTl();}
+function showTT(e,id,isUa){const iv=IVS.find(x=>x.id===id);if(!iv)return;const pn={high:'高優先度',med:'中優先度',low:'低優先度'},pc={high:'#FCEBEB',med:'#FAEEDA',low:'#EAF3DE'},ptc={high:'#A32D2D',med:'#854F0B',low:'#3B6D11'};document.getElementById('tt-title').textContent=iv.title;document.getElementById('tt-time').textContent=`${iv.time}〜(${iv.dur}分)`;document.getElementById('tt-place').textContent=iv.place;document.getElementById('tt-unit').textContent=isUa?'未割当':iv.unit;const nr=document.getElementById('tt-nrow');if(iv.note){document.getElementById('tt-note').textContent=iv.note;nr.style.display='flex';}else{nr.style.display='none';}const b=document.getElementById('tt-badge');b.textContent=pn[iv.priority];b.style.background=pc[iv.priority];b.style.color=ptc[iv.priority];document.getElementById('tt-hint').style.display=isUa?'block':'none';const tt=document.getElementById('tltt');tt.classList.add('show');const r=e.currentTarget.getBoundingClientRect();let top=r.top-130;if(top<4)top=r.bottom+4;tt.style.left=Math.min(r.left,window.innerWidth-270)+'px';tt.style.top=top+'px';}
+function hideTT(){document.getElementById('tltt').classList.remove('show');}
+function jumpIv(id){const el=document.querySelector('[data-view="interviews"]');sv(el,'interviews');setTimeout(()=>{const items=document.querySelectorAll('#iv-list .ic');const idx=[...IVS].sort((a,b)=>a.time.localeCompare(b.time)).findIndex(x=>x.id===id);if(items[idx]){items[idx].style.transition='background .3s';items[idx].style.background='#e8f0fe';items[idx].scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{items[idx].style.background='';},1500);}},80);}
+
+function setPrevDay(){const d=new Date(tlD);d.setDate(d.getDate()-1);document.getElementById('p-date').value=d.toISOString().split('T')[0];rPrint();}
+function rPrint(){const dateVal=document.getElementById('p-date').value||tlD;const[rSh,rEh]=document.getElementById('p-range').value.split('-').map(Number);const MIN_ROW=parseInt(document.getElementById('p-minrow').value)||30;const rS=rSh*60,rE=rEh*60,BASE_PPM=1.2;const allDay=IVS.filter(iv=>iv.date===dateVal).sort((a,b)=>a.time.localeCompare(b.time));const kList=allDay.filter(iv=>isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS);const nList=allDay.filter(iv=>!isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS);const byStart={};nList.forEach(iv=>{const sm=toMin(iv.time);if(!byStart[sm])byStart[sm]=[];byStart[sm].push(iv);});const startMins=Object.keys(byStart).map(Number).sort((a,b)=>a-b);const yMap={};let curY=0,prevEM=rS;startMins.forEach(sm=>{if(sm<rS)return;curY+=(sm-prevEM)*BASE_PPM;yMap[sm]=curY;curY+=byStart[sm].length*MIN_ROW;prevEM=sm;});const totalH=Math.max(curY+(rE-prevEM)*BASE_PPM,(rE-rS)*BASE_PPM);function t2y(min){if(min<=rS)return 0;if(min>=rE)return totalH;let pMin=rS,pY=0;startMins.forEach(sm=>{if(sm<=min&&sm>=rS){pMin=sm;pY=yMap[sm]||0;}});return Math.min(pY+(min-pMin)*BASE_PPM,totalH);}let colH='';for(let h=rSh;h<=rEh;h++){colH+=`<div class="k-tick" style="top:${t2y(h*60).toFixed(1)}px"><span class="k-tick-l">${String(h).padStart(2,'0')}:00</span></div>`;}kList.forEach((iv,i)=>{const sm2=Math.max(toMin(iv.time),rS),em=Math.min(toMin(iv.time)+iv.dur,rE);if(sm2>=rE||em<=rS)return;const top=t2y(sm2).toFixed(1),h2=Math.max(12,t2y(em)-t2y(sm2)).toFixed(1);const col=KC[i%KC.length];const u2=UNITS.find(x=>`ユニット ${x.n}`===iv.unit);const short=u2?`U${u2.n}`:'未';const mems=u2?u2.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・'):'未割当';colH+=`<div class="k-seg" style="top:${top}px;height:${h2}px;background:${col}"><span class="k-seg-l">${short}</span><span class="k-seg-l" style="font-size:6px;opacity:.85">${mems}</span><span class="k-seg-l" style="font-size:6px;opacity:.75">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span></div>`;});let rowsH='';nList.slice().sort((a,b)=>toMin(a.time)-toMin(b.time)).forEach(iv=>{const sm2=toMin(iv.time);const grp=byStart[sm2]||[];const idx=grp.findIndex(x=>x.id===iv.id);const top=(yMap[sm2]||0)+idx*MIN_ROW;const u2=UNITS.find(x=>`ユニット ${x.n}`===iv.unit);const mems=u2?u2.members.map(id=>getStaff(id)?.name).join(' / '):'—';const isUa2=isUA(iv);const ovK=kList.some(k=>{const ks=toMin(k.time),ke=ks+k.dur;return sm2<ke&&sm2+iv.dur>ks;});const bg=isUa2?'#fff8f0':ovK?'#fffbf4':'#fff';const bl=isUa2?'2px solid #BA7517':ovK?'2px solid #F0997B':'2px solid transparent';rowsH+=`<div class="iv-row" style="height:${MIN_ROW}px;min-height:${MIN_ROW}px;background:${bg};border-left:${bl}"><div class="iv-cell" style="width:50px;font-weight:500;font-size:9.5px">${iv.time}</div><div class="iv-cell" style="width:140px;font-size:10px;font-weight:500">${iv.title}</div><div class="iv-cell" style="width:130px;font-size:9.5px;color:#333">${iv.place}</div><div class="iv-cell" style="width:108px;font-size:9px"><div style="font-weight:500">${isUa2?'未割当':iv.unit}</div><div style="font-size:8px;color:#555">${isUa2?'':mems}</div></div><div class="iv-cell" style="flex:1;font-size:9px;color:#555">${iv.note||''}</div></div>`;});const d=new Date(dateVal),days2=['日','月','火','水','木','金','土'];const dateLabel=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days2[d.getDay()]}）`;const now=new Date(),printLabel=`印刷：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;const kleg=kList.length?`<div class="a4-kleg"><strong>官邸担当：</strong>${kList.map((iv,i)=>{const u2=UNITS.find(x=>`ユニット ${x.n}`===iv.unit);const mems=u2?u2.members.map(id=>getStaff(id)?.name).join(' / '):'未割当';return`<span style="display:inline-block;background:${KC[i%KC.length]};color:#fff;padding:1px 6px;border-radius:2px;margin:1px 2px;font-size:8.5px">${iv.unit||'未割当'} ${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}（${mems}）</span>`;}).join('')}</div>`:'';const page=`<div class="a4"><div class="a4-ph"><div><div class="a4-ttl">取材項目一覧</div><div style="font-size:10px;color:#555;margin-top:3px">${dateLabel} &nbsp;${fmtT(rS)}〜${fmtT(rE)}</div></div><div class="a4-meta">${printLabel}<br>通常取材 ${nList.length}件 / 官邸担当 ${kList.length}件</div></div>${kleg}<div class="a4-legend"><div class="leg"><div class="leg-sw" style="background:#C85A00"></div>官邸担当帯（左縦列）</div><div class="leg"><div class="leg-sw" style="background:#fffbf4;border:1px solid #F0997B"></div>官邸と時間が重なる取材</div><div class="leg"><div class="leg-sw" style="background:#fff8f0;border:1px solid #BA7517"></div>未割当</div></div><div class="a4-body"><div class="k-col"><div class="k-col-hdr">官邸<br>の<br>動き</div><div class="k-body" style="height:${totalH.toFixed(0)}px;position:relative">${colH}</div></div><div class="iv-wrap"><div class="iv-hdr"><div class="iv-hdr-c" style="width:50px">時刻</div><div class="iv-hdr-c" style="width:140px">取材名</div><div class="iv-hdr-c" style="width:130px">場所</div><div class="iv-hdr-c" style="width:108px">担当者</div><div class="iv-hdr-c" style="flex:1">備考</div></div><div class="iv-rows" style="min-height:${totalH.toFixed(0)}px;border:0.5px solid #e0e0e0;overflow:visible">${nList.length?rowsH:'<div style="font-size:10px;color:#999;padding:10px;font-style:italic">この時間帯の取材はありません</div>'}</div></div></div><div class="a4-footer"><span>取材管理システム 試作２号</span><span>${dateLabel} 取材一覧</span></div></div>`;document.getElementById('pp').innerHTML=page;document.getElementById('pp-out').innerHTML=page;}
+
+const SP=[['早','早','日','早','早','休','休'],['日','早','早','日','休','早','早'],['早','休','日','早','早','早','日'],['日','日','早','休','早','早','早'],['早','早','早','日','休','日','早'],['休','早','早','早','日','早','日']];
+function rShifts(){document.getElementById('sh-tbody').innerHTML=UNITS.slice(0,8).map((u,i)=>{const p=SP[i%6];const m0=u.members.length?getStaff(u.members[0]):null;return`<tr><td><div style="display:flex;align-items:center;gap:5px">${m0?`<div style="width:19px;height:19px;border-radius:50%;background:${m0.col.bg};color:${m0.col.tc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500">${m0.init}</div>`:''}U${u.n}</div></td>${p.map(s=>`<td><span class="sbar ${s==='早'?'sbe':s==='日'?'sbd':'sbo'}">${s==='早'?'早番':s==='日'?'日勤':'休日'}</span></td>`).join('')}</tr>`;}).join('');}
+function rNotifs(){document.getElementById('nf-list').innerHTML=NOTIFS.map(n=>`<div class="nfi ${n.read?'':'unread'}"><div class="nfic" style="background:${n.bg}">${n.icon}</div><div style="flex:1"><div class="nft">${n.text}</div><div class="nfs">${n.sub}</div></div><div class="nftm">${n.time}</div></div>`).join('');}
+function markAllRead(){NOTIFS.forEach(n=>n.read=true);rNotifs();}
+function rChat(){document.getElementById('chat-list').innerHTML=CHATS.map(c=>`<div class="cc ${c.id===aCid?'active':''}" onclick="sCh(${c.id})"><div class="cav3">${c.init}</div><div style="flex:1;min-width:0"><div class="cn2">${c.name}</div><div class="cp2">${c.msgs[c.msgs.length-1].text}</div></div>${c.online?'<div class="od"></div>':''}</div>`).join('');rMsgs();}
+function sCh(id){aCid=id;rChat();}
+function rMsgs(){const chat=CHATS.find(c=>c.id===aCid);document.getElementById('c-name').textContent=`${chat.name} — ${chat.sub}`;document.getElementById('c-av').textContent=chat.init;document.getElementById('c-msgs').innerHTML=chat.msgs.map(m=>`<div class="msg ${m.fr?'mfr':'mme'}">${m.fr&&m.name?`<div style="font-size:10px;color:var(--ct2);margin-bottom:2px">${m.name}</div>`:''}<div class="mb2">${m.text}</div><div class="mt2">${m.time}</div></div>`).join('');const a=document.getElementById('c-msgs');a.scrollTop=a.scrollHeight;}
+function sendMsg(){const inp=document.getElementById('c-inp'),txt=inp.value.trim();if(!txt)return;const chat=CHATS.find(c=>c.id===aCid),now=new Date();chat.msgs.push({fr:false,text:txt,time:`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`});inp.value='';rMsgs();}
+
+function rFormation(){renderPool();renderFmUnits();updateFmStatus();}
+function renderPool(){const q=(document.getElementById('pool-search').value||'').toLowerCase();const filtered=STAFF.filter(s=>!q||s.name.includes(q)||s.kana.includes(q)||s.role.includes(q));document.getElementById('pool-total').textContent=`${STAFF.length}名`;document.getElementById('pool-body').innerHTML=filtered.map(s=>{const u=unitOfStaff(s.id);const assigned=!!u;return`<div class="sc2 ${assigned?'is-assigned':'draggable'}" draggable="${!assigned}" id="sc-${s.id}" ondragstart="${!assigned?`fmDS(event,${s.id},null)`:''}" ondragend="fmDE(event)"><div class="s-av2" style="background:${s.col.bg};color:${s.col.tc}">${s.init}</div><div style="min-width:0;flex:1"><div class="s-nm">${s.name}</div><div class="s-rl">${s.role}</div></div><span class="s-bg ${assigned?'busy':'free'}">${assigned?`U${u.n}`:'空き'}</span></div>`;}).join('');}
+function renderFmUnits(){document.getElementById('fm-units').innerHTML=UNITS.map(u=>{const over=u.members.length>2;const chips=u.members.map(sid=>{const s=getStaff(sid);if(!s)return'';return`<div class="chip" draggable="true" ondragstart="fmDS(event,${sid},${u.n})" ondragend="fmDE(event)"><div class="chip-av" style="background:${s.col.bg};color:${s.col.tc}">${s.init}</div><div style="min-width:0;flex:1"><div class="chip-nm">${s.name}</div><div class="chip-rl">${s.role}</div></div><button class="chip-rm" onclick="rmFromUnit(${u.n},${sid})">×</button></div>`;}).join('');return`<div class="u-slot" id="us-${u.n}" ondragover="fmDO(event,${u.n})" ondragleave="fmDL(event,${u.n})" ondrop="fmDrop(event,${u.n})"><div class="u-slot-hdr"><span class="u-slot-num">ユニット ${u.n}</span><span class="u-slot-cnt" style="color:${over?'#D85A30':'var(--ct2)'}">${u.members.length}名${over?' ⚠':''}</span></div><div class="u-members">${chips}<div class="drop-hint" id="dh-${u.n}">ここにドロップ</div></div></div>`;}).join('');}
+function updateFmStatus(){const asgn=new Set(UNITS.flatMap(u=>u.members));const free=STAFF.length-asgn.size;const over=UNITS.filter(u=>u.members.length>2).length;document.getElementById('st-asgn').textContent=asgn.size;document.getElementById('st-free').textContent=free;document.getElementById('st-over').textContent=over;document.getElementById('fm-free').textContent=free;}
+function fmDS(e,sid,fu){dragSid=sid;dragFromUnit=fu;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.getElementById(`sc-${sid}`);if(el)el.classList.add('is-dragging');},0);}
+function fmDE(e){dragSid=null;dragFromUnit=null;document.querySelectorAll('.sc2,.chip').forEach(el=>el.classList.remove('is-dragging'));document.querySelectorAll('.u-slot').forEach(el=>el.classList.remove('drag-over'));document.querySelectorAll('.drop-hint').forEach(el=>el.classList.remove('active'));}
+function fmDO(e,un){e.preventDefault();document.getElementById(`us-${un}`).classList.add('drag-over');document.getElementById(`dh-${un}`).classList.add('active');}
+function fmDL(e,un){document.getElementById(`us-${un}`).classList.remove('drag-over');document.getElementById(`dh-${un}`).classList.remove('active');}
+function fmDrop(e,toUN){e.preventDefault();document.getElementById(`us-${toUN}`).classList.remove('drag-over');document.getElementById(`dh-${toUN}`).classList.remove('active');if(dragSid===null)return;if(dragFromUnit!==null){const pu=UNITS.find(u=>u.n===dragFromUnit);if(pu)pu.members=pu.members.filter(id=>id!==dragSid);}else{UNITS.forEach(u=>{u.members=u.members.filter(id=>id!==dragSid);});}const nu=UNITS.find(u=>u.n===toUN);if(nu&&!nu.members.includes(dragSid))nu.members.push(dragSid);rFormation();showToast(`${getStaff(dragSid)?.name} → ユニット ${toUN} に配置`);}
+function rmFromUnit(un,sid){const u=UNITS.find(x=>x.n===un);if(u)u.members=u.members.filter(id=>id!==sid);rFormation();showToast(`${getStaff(sid)?.name} を外しました`);}
+function autoAssign(){UNITS.forEach(u=>u.members=[]);const rep=STAFF.filter(s=>s.role==='記者'),cam=STAFF.filter(s=>s.role==='カメラ');const max=Math.min(rep.length,cam.length,12);for(let i=0;i<max;i++)UNITS[i].members=[rep[i].id,cam[i].id];rFormation();showToast('自動編成完了');}
+function clearFormation(){UNITS.forEach(u=>u.members=[]);rFormation();showToast('全ユニットをクリアしました');}
+function confirmFormation(){showToast(`編成を確定しました（${document.getElementById('f-fdate').value}）`);rUnits();}
+function openAddStaff(){document.getElementById('ns-name').value='';document.getElementById('ns-kana').value='';document.getElementById('ns-email').value='';selColor=0;renderColorPicker();document.getElementById('staff-modal').classList.add('open');}
+function closeAddStaff(){document.getElementById('staff-modal').classList.remove('open');}
+function renderColorPicker(){document.getElementById('color-picker').innerHTML=AV_COLS.map((c,i)=>`<div onclick="selColor=${i};renderColorPicker()" style="width:24px;height:24px;border-radius:50%;background:${c.bg};border:2px solid ${i===selColor?c.tc:'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:${c.tc}">A</div>`).join('');}
+function addStaff(){const name=document.getElementById('ns-name').value.trim();if(!name)return;STAFF.push({id:nextSid++,name,kana:document.getElementById('ns-kana').value.trim(),role:document.getElementById('ns-role').value,email:document.getElementById('ns-email').value.trim()||`staff${nextSid}@hodo.example.com`,col:AV_COLS[selColor],init:name.charAt(0)});closeAddStaff();rFormation();showToast(`${name}を追加しました`);}
+
+const initD=new Date(tlD);initD.setDate(initD.getDate()-1);
+document.getElementById('p-date').value=initD.toISOString().split('T')[0];
+renderColorPicker();
+rDash();
+</script>
+</body>
+</html>
