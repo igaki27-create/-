@@ -564,10 +564,7 @@ textarea.fi{resize:vertical;min-height:60px;line-height:1.6}
       <div class="fg" style="flex:1"><label class="fl">所要時間（分）</label><input class="fi" id="f-dur" type="number" value="60" min="15" step="15"></div>
     </div>
     <div class="fg"><label class="fl">場所</label><input class="fi" id="f-place" placeholder="例：東京都庁 本庁舎2F"></div>
-    <div class="frow">
-      <div class="fg" style="flex:1"><label class="fl">担当クルー</label><select class="fi" id="f-unit"><option value="">-- 未割当 --</option></select></div>
-      <div class="fg" style="flex:1"><label class="fl">優先度</label><select class="fi" id="f-priority"><option value="high">高</option><option value="med" selected>中</option><option value="low">低</option></select></div>
-    </div>
+    <div class="fg"><label class="fl">担当クルー</label><select class="fi" id="f-unit"><option value="">-- 未割当 --</option></select></div>
     <div class="fg"><label class="fl">備考</label><textarea class="fi" id="f-note" style="min-height:50px"></textarea></div>
     <div class="mf"><button class="btn bts" onclick="closeIvM()">キャンセル</button><button class="btn btp bts" id="iv-submit-btn" onclick="addIv()">登録</button></div>
   </div>
@@ -771,7 +768,6 @@ function rIvs(){
         ${iv.note?`<div class="ino">${iv.note}</div>`:''}
         <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="iu" onclick="${isUA(iv)?`openAs(${iv.id})`:`mailFromIv('${iv.unit}')`}">${isUA(iv)?'👉 担当を割り当て':iv.unit+' ✉'}</span>
-          <span style="font-size:11px;color:var(--ct2);display:flex;align-items:center;gap:3px"><span class="pd ${pc[iv.priority]}"></span>優先度:${pn[iv.priority]}</span>
         </div>
       </div>
     </div>`).join('');
@@ -781,18 +777,18 @@ function mailFromIv(un){const n=parseInt(un.replace('クルー ',''));if(!isNaN(
 // IV modal
 function buildKyokuChecks(){
   document.getElementById('kyoku-checks').innerHTML=KYOKU.map(k=>`
-    <label class="kyoku-check" id="kc-${k.code}" onclick="toggleKyoku('${k.code}',this)">
-      <input type="checkbox" value="${k.code}" style="display:none">
+    <button type="button" class="kyoku-check" data-code="${k.code}" onclick="toggleKyoku('${k.code}')">
       ${k.code}${k.name}
-    </label>`).join('');
+    </button>`).join('');
 }
-function toggleKyoku(code,el){
-  const checks=document.querySelectorAll('#kyoku-checks .kyoku-check');
-  const checked=[...checks].filter(c=>c.classList.contains('checked'));
+function toggleKyoku(code){
+  const el=document.querySelector(`#kyoku-checks [data-code="${code}"]`);
+  if(!el)return;
+  const checked=document.querySelectorAll('#kyoku-checks .kyoku-check.checked');
   if(el.classList.contains('checked')){el.classList.remove('checked');}
   else{if(checked.length>=3){showToast('代表局は最大3社まで選択できます','!');return;}el.classList.add('checked');}
 }
-function getSelectedKyoku(){return [...document.querySelectorAll('#kyoku-checks .kyoku-check.checked')].map(el=>el.querySelector('input').value);}
+function getSelectedKyoku(){return [...document.querySelectorAll('#kyoku-checks .kyoku-check.checked')].map(el=>el.getAttribute('data-code'));}
 
 function switchKind(kind){
   curKind=kind;
@@ -834,7 +830,7 @@ function addIv(){
   const title=document.getElementById('f-title').value.trim();if(!title)return;
   const kyoku=getSelectedKyoku();
   if(curKind==='dai'&&kyoku.length===0){showToast('代表局を1社以上選択してください','!');return;}
-  const iv={id:nid++,title,date:document.getElementById('f-date').value,time:document.getElementById('f-time').value,dur:parseInt(document.getElementById('f-dur').value)||60,place:document.getElementById('f-place').value||'未設定',unit:document.getElementById('f-unit').value,priority:document.getElementById('f-priority').value,note:document.getElementById('f-note').value,kind:curKind,kyoku,daiDetail:document.getElementById('f-dai-detail').value};
+  const iv={id:nid++,title,date:document.getElementById('f-date').value,time:document.getElementById('f-time').value,dur:parseInt(document.getElementById('f-dur').value)||60,place:document.getElementById('f-place').value||'未設定',unit:document.getElementById('f-unit').value,priority:'med',note:document.getElementById('f-note').value,kind:curKind,kyoku,daiDetail:document.getElementById('f-dai-detail').value};
   IVS.push(iv);closeIvM();
   const label=curKind==='kantei'?'官邸取材':curKind==='dai'?'代表取材':'ユニ取材';
   showToast(`${label}「${title}」を登録しました`);
