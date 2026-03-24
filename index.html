@@ -886,36 +886,156 @@ function setPrevDay(){const d=new Date(tlD);d.setDate(d.getDate()-1);document.ge
 function rPrint(){
   const dateVal=document.getElementById('p-date').value||tlD;
   const[rSh,rEh]=document.getElementById('p-range').value.split('-').map(Number);
-  const MIN_ROW=parseInt(document.getElementById('p-minrow').value)||30;
-  const rS=rSh*60,rE=rEh*60,BASE_PPM=1.2;
+  const MIN_ROW=parseInt(document.getElementById('p-minrow').value)||28;
+  const MIN_ROWS_PER_KOMA=2; // 取材ゼロでも最低2行分確保
+  const rS=rSh*60,rE=rEh*60;
+
   const allDay=IVS.filter(iv=>iv.date===dateVal).sort((a,b)=>a.time.localeCompare(b.time));
-  const kList=allDay.filter(iv=>isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS);
-  const nList=allDay.filter(iv=>!isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS);
-  const byStart={};nList.forEach(iv=>{const sm=toMin(iv.time);if(!byStart[sm])byStart[sm]=[];byStart[sm].push(iv);});
-  const startMins=Object.keys(byStart).map(Number).sort((a,b)=>a-b);
-  const yMap={};let curY=0,prevEM=rS;
-  startMins.forEach(sm=>{if(sm<rS)return;curY+=(sm-prevEM)*BASE_PPM;yMap[sm]=curY;curY+=byStart[sm].length*MIN_ROW;prevEM=sm;});
-  const totalH=Math.max(curY+(rE-prevEM)*BASE_PPM,(rE-rS)*BASE_PPM);
-  function t2y(min){if(min<=rS)return 0;if(min>=rE)return totalH;let pMin=rS,pY=0;startMins.forEach(sm=>{if(sm<=min&&sm>=rS){pMin=sm;pY=yMap[sm]||0;}});return Math.min(pY+(min-pMin)*BASE_PPM,totalH);}
-  let colH='';
-  for(let h=rSh;h<=rEh;h++){colH+=`<div class="k-tick" style="top:${t2y(h*60).toFixed(1)}px"><span class="k-tick-l">${String(h).padStart(2,'0')}:00</span></div>`;}
-  kList.forEach((iv,i)=>{const sm2=Math.max(toMin(iv.time),rS),em=Math.min(toMin(iv.time)+iv.dur,rE);if(sm2>=rE||em<=rS)return;const top=t2y(sm2).toFixed(1),h2=Math.max(12,t2y(em)-t2y(sm2)).toFixed(1);const col=KC[i%KC.length];const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);const short=u2?`C${u2.n}`:'未';const mems=u2?u2.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・'):'未割当';colH+=`<div class="k-seg" style="top:${top}px;height:${h2}px;background:${col}"><span class="k-seg-l">${short}</span><span class="k-seg-l" style="font-size:6px;opacity:.85">${mems}</span><span class="k-seg-l" style="font-size:6px;opacity:.75">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span></div>`;});
-  let rowsH='';
-  nList.slice().sort((a,b)=>toMin(a.time)-toMin(b.time)).forEach(iv=>{
-    const sm2=toMin(iv.time);const grp=byStart[sm2]||[];const idx=grp.findIndex(x=>x.id===iv.id);const top=(yMap[sm2]||0)+idx*MIN_ROW;
-    const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);const mems=u2?u2.members.map(id=>getStaff(id)?.name).join(' / '):'—';
-    const isUa2=isUA(iv);const isDai2=iv.kind==='dai';const ovK=kList.some(k=>{const ks=toMin(k.time),ke=ks+k.dur;return sm2<ke&&sm2+iv.dur>ks;});
-    const bg=isUa2?'#fff8f0':isDai2?'#fff5f5':ovK?'#fffbf4':'#fff';
-    const bl=isUa2?'2px solid #BA7517':isDai2?'2px solid #c62828':ovK?'2px solid #F0997B':'2px solid transparent';
-    const kyokuStr=iv.kyoku&&iv.kyoku.length?iv.kyoku.map(k=>{const kd=KYOKU.find(x=>x.code===k);return k+(kd?kd.name:'');}).join(' '):'';
-    const kindLabel=iv.kind==='dai'?`代表(${kyokuStr})`:iv.kind==='kantei'?'官邸':'ユニ';
-    rowsH+=`<div class="iv-row" style="height:${MIN_ROW}px;min-height:${MIN_ROW}px;background:${bg};border-left:${bl}"><div class="iv-cell" style="width:45px;font-weight:500;font-size:9.5px">${iv.time}</div><div class="iv-cell" style="width:42px;font-size:8.5px;color:${isDai2?'#A32D2D':'#185FA5'}">${kindLabel}</div><div class="iv-cell" style="width:130px;font-size:10px;font-weight:500">${iv.title}</div><div class="iv-cell" style="width:110px;font-size:9.5px;color:#333">${iv.place}</div><div class="iv-cell" style="width:100px;font-size:9px"><div style="font-weight:500">${isUa2?'未割当':iv.unit}</div><div style="font-size:8px;color:#555">${isUa2?'':mems}</div></div><div class="iv-cell" style="flex:1;font-size:9px;color:#555">${[iv.daiDetail,iv.note].filter(Boolean).join(' / ')}</div></div>`;
+  // 官邸コマ（範囲内に重なるもの、時刻順）
+  const kList=allDay.filter(iv=>isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS)
+                    .sort((a,b)=>toMin(a.time)-toMin(b.time));
+  // 通常取材（範囲内に重なるもの）
+  const nList=allDay.filter(iv=>!isK(iv)&&toMin(iv.time)<rE&&toMin(iv.time)+iv.dur>rS)
+                    .sort((a,b)=>toMin(a.time)-toMin(b.time));
+
+  // ── 区画を構築 ──
+  // 「区画」= 官邸コマ1本 or 官邸コマ間/外の隙間
+  // 各区画に属する取材を割り当て、行数を確定する
+
+  // まず時間軸上の「区切り点」を収集（rS, 各コマ開始/終了, rE）
+  const breakPts=[rS];
+  kList.forEach(k=>{
+    const ks=Math.max(toMin(k.time),rS);
+    const ke=Math.min(toMin(k.time)+k.dur,rE);
+    if(!breakPts.includes(ks))breakPts.push(ks);
+    if(!breakPts.includes(ke))breakPts.push(ke);
   });
+  if(!breakPts.includes(rE))breakPts.push(rE);
+  breakPts.sort((a,b)=>a-b);
+
+  // 区画ごとの情報を作成
+  const sections=[];
+  for(let i=0;i<breakPts.length-1;i++){
+    const secS=breakPts[i],secE=breakPts[i+1];
+    // この区間に重なる官邸コマを探す
+    const koma=kList.find(k=>toMin(k.time)<=secS&&toMin(k.time)+k.dur>=secE)||null;
+    // この区間に「始まりが含まれる」通常取材を集める（取材開始時刻がこの区間内）
+    const ivs=nList.filter(iv=>{
+      const sm=toMin(iv.time);
+      return sm>=secS&&sm<secE;
+    });
+    const rows=Math.max(MIN_ROWS_PER_KOMA,ivs.length);
+    sections.push({secS,secE,koma,ivs,rows,height:rows*MIN_ROW,yTop:0});
+  }
+  // yTop を累積計算
+  let cumY=0;
+  sections.forEach(sec=>{sec.yTop=cumY;cumY+=sec.height;});
+  const totalH=cumY;
+
+  // 官邸コマごとの yTop/height を算出（コマが複数区画にまたがる場合も対応）
+  function komaY(k){
+    const ks=Math.max(toMin(k.time),rS),ke=Math.min(toMin(k.time)+k.dur,rE);
+    const first=sections.find(s=>s.secS===ks);
+    const last=[...sections].reverse().find(s=>s.secE===ke);
+    if(!first||!last)return{top:0,h:MIN_ROW};
+    const top=first.yTop;
+    const h=(last.yTop+last.height)-top;
+    return{top,h};
+  }
+
+  // ── 官邸縦帯HTML ──
+  let colH='';
+  // 時刻目盛り（区画境界に合わせて）
+  for(let h=rSh;h<=rEh;h++){
+    const min=h*60;
+    if(min<rS||min>rE)continue;
+    // min に対応するyを計算
+    const sec=sections.find(s=>s.secS<=min&&s.secE>min);
+    let yPx=0;
+    if(sec){
+      const ratio=(min-sec.secS)/(sec.secE-sec.secS);
+      yPx=sec.yTop+ratio*sec.height;
+    } else if(min>=rE){yPx=totalH;}
+    colH+=`<div class="k-tick" style="top:${yPx.toFixed(1)}px"><span class="k-tick-l">${String(h).padStart(2,'0')}:00</span></div>`;
+  }
+  // 官邸コマ帯
+  kList.forEach((iv,i)=>{
+    const{top,h}=komaY(iv);
+    if(h<=0)return;
+    const col=KC[i%KC.length];
+    const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);
+    const short=u2?`C${u2.n}`:'未';
+    const mems=u2?u2.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・'):'未割当';
+    colH+=`<div class="k-seg" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;background:${col}">
+      <span class="k-seg-l">${short}</span>
+      <span class="k-seg-l" style="font-size:6px;opacity:.85">${mems}</span>
+      <span class="k-seg-l" style="font-size:6px;opacity:.75">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span>
+    </div>`;
+  });
+
+  // ── 取材行HTML（区画ごとに連続して並べる） ──
+  let rowsH='';
+  sections.forEach(sec=>{
+    sec.ivs.forEach((iv,idx)=>{
+      const top=sec.yTop+idx*MIN_ROW;
+      const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);
+      const mems=u2?u2.members.map(id=>getStaff(id)?.name).join(' / '):'—';
+      const isUa2=isUA(iv);const isDai2=iv.kind==='dai';
+      const inKoma=!!sec.koma;
+      const bg=isUa2?'#fff8f0':isDai2?'#fff5f5':inKoma?'#fffbf4':'#fff';
+      const bl=isUa2?'2px solid #BA7517':isDai2?'2px solid #c62828':inKoma?'2px solid #F0997B':'2px solid transparent';
+      const kyokuStr=iv.kyoku&&iv.kyoku.length?iv.kyoku.map(k=>{const kd=KYOKU.find(x=>x.code===k);return k+(kd?kd.name:'');}).join(' '):'';
+      const kindLabel=iv.kind==='dai'?`代表(${kyokuStr})`:'ユニ';
+      rowsH+=`<div class="iv-row" style="position:absolute;top:${top}px;left:0;right:0;height:${MIN_ROW}px;background:${bg};border-left:${bl};border-bottom:0.5px solid #e0e0e0;display:flex;overflow:hidden">
+        <div class="iv-cell" style="width:45px;font-weight:500;font-size:9.5px">${iv.time}</div>
+        <div class="iv-cell" style="width:42px;font-size:8.5px;color:${isDai2?'#A32D2D':'#185FA5'}">${kindLabel}</div>
+        <div class="iv-cell" style="width:130px;font-size:10px;font-weight:500">${iv.title}</div>
+        <div class="iv-cell" style="width:110px;font-size:9.5px;color:#333">${iv.place}</div>
+        <div class="iv-cell" style="width:100px;font-size:9px"><div style="font-weight:500">${isUa2?'未割当':iv.unit}</div><div style="font-size:8px;color:#555">${isUa2?'':mems}</div></div>
+        <div class="iv-cell" style="flex:1;font-size:9px;color:#555">${[iv.daiDetail,iv.note].filter(Boolean).join(' / ')}</div>
+      </div>`;
+    });
+    // 区画内の空白行（取材ゼロまたは取材数が最低行数未満の場合）
+    for(let e=sec.ivs.length;e<sec.rows;e++){
+      const top=sec.yTop+e*MIN_ROW;
+      const bg=sec.koma?'#fffbf4':'#fff';
+      rowsH+=`<div style="position:absolute;top:${top}px;left:0;right:0;height:${MIN_ROW}px;background:${bg};border-bottom:0.5px solid #f0f0f0;"></div>`;
+    }
+  });
+
   const d=new Date(dateVal),days2=['日','月','火','水','木','金','土'];
   const dateLabel=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days2[d.getDay()]}）`;
-  const now=new Date(),printLabel=`印刷：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const now2=new Date(),printLabel=`印刷：${now2.getFullYear()}/${String(now2.getMonth()+1).padStart(2,'0')}/${String(now2.getDate()).padStart(2,'0')} ${String(now2.getHours()).padStart(2,'0')}:${String(now2.getMinutes()).padStart(2,'0')}`;
   const kleg=kList.length?`<div class="a4-kleg"><strong>官邸担当：</strong>${kList.map((iv,i)=>{const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);const mems=u2?u2.members.map(id=>getStaff(id)?.name).join(' / '):'未割当';return`<span style="display:inline-block;background:${KC[i%KC.length]};color:#fff;padding:1px 6px;border-radius:2px;margin:1px 2px;font-size:8.5px">${iv.unit||'未割当'} ${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}（${mems}）</span>`;}).join('')}</div>`:'';
-  const page=`<div class="a4"><div class="a4-ph"><div><div class="a4-ttl">取材項目一覧</div><div style="font-size:10px;color:#555;margin-top:3px">${dateLabel} &nbsp;${fmtT(rS)}〜${fmtT(rE)}</div></div><div class="a4-meta">${printLabel}<br>ユニ取材 ${nList.filter(iv=>iv.kind==='uni').length}件 / 代表取材 ${nList.filter(iv=>iv.kind==='dai').length}件 / 官邸担当 ${kList.length}件</div></div>${kleg}<div class="a4-legend"><div class="leg"><div class="leg-sw" style="background:#C85A00"></div>官邸担当帯（左縦列）</div><div class="leg"><div class="leg-sw" style="background:#fff5f5;border:1px solid #c62828"></div>代表取材</div><div class="leg"><div class="leg-sw" style="background:#fffbf4;border:1px solid #F0997B"></div>官邸と時間が重なる取材</div><div class="leg"><div class="leg-sw" style="background:#fff8f0;border:1px solid #BA7517"></div>未割当</div></div><div class="a4-body"><div class="k-col"><div class="k-col-hdr">官邸<br>の<br>動き</div><div class="k-body" style="height:${totalH.toFixed(0)}px;position:relative">${colH}</div></div><div class="iv-wrap"><div class="iv-hdr"><div class="iv-hdr-c" style="width:45px">時刻</div><div class="iv-hdr-c" style="width:42px">種別</div><div class="iv-hdr-c" style="width:130px">取材名</div><div class="iv-hdr-c" style="width:110px">場所</div><div class="iv-hdr-c" style="width:100px">担当者</div><div class="iv-hdr-c" style="flex:1">備考・代表詳細</div></div><div class="iv-rows" style="min-height:${totalH.toFixed(0)}px;border:0.5px solid #e0e0e0;overflow:visible">${nList.length?rowsH:'<div style="font-size:10px;color:#999;padding:10px;font-style:italic">この時間帯の取材はありません</div>'}</div></div></div><div class="a4-footer"><span>取材管理システム 試作２号</span><span>${dateLabel} 取材一覧</span></div></div>`;
+  const page=`<div class="a4"><div class="a4-ph"><div><div class="a4-ttl">取材項目一覧</div><div style="font-size:10px;color:#555;margin-top:3px">${dateLabel} &nbsp;${fmtT(rS)}〜${fmtT(rE)}</div></div><div class="a4-meta">${printLabel}<br>ユニ取材 ${nList.filter(iv=>iv.kind==='uni').length}件 / 代表取材 ${nList.filter(iv=>iv.kind==='dai').length}件 / 官邸担当 ${kList.length}件</div></div>
+  ${kleg}
+  <div class="a4-legend">
+    <div class="leg"><div class="leg-sw" style="background:#C85A00"></div>官邸担当帯（左縦列）</div>
+    <div class="leg"><div class="leg-sw" style="background:#fffbf4;border:1px solid #F0997B"></div>官邸コマと重なる取材</div>
+    <div class="leg"><div class="leg-sw" style="background:#fff5f5;border:1px solid #c62828"></div>代表取材</div>
+    <div class="leg"><div class="leg-sw" style="background:#fff8f0;border:1px solid #BA7517"></div>未割当</div>
+  </div>
+  <div class="a4-body">
+    <div class="k-col">
+      <div class="k-col-hdr">官邸<br>の<br>動き</div>
+      <div class="k-body" style="height:${totalH}px;position:relative">${colH}</div>
+    </div>
+    <div class="iv-wrap">
+      <div class="iv-hdr">
+        <div class="iv-hdr-c" style="width:45px">時刻</div>
+        <div class="iv-hdr-c" style="width:42px">種別</div>
+        <div class="iv-hdr-c" style="width:130px">取材名</div>
+        <div class="iv-hdr-c" style="width:110px">場所</div>
+        <div class="iv-hdr-c" style="width:100px">担当者</div>
+        <div class="iv-hdr-c" style="flex:1">備考・代表詳細</div>
+      </div>
+      <div style="position:relative;height:${totalH}px;border:0.5px solid #e0e0e0;overflow:hidden">
+        ${nList.length?rowsH:'<div style="font-size:10px;color:#999;padding:10px;font-style:italic">この時間帯の取材はありません</div>'}
+      </div>
+    </div>
+  </div>
+  <div class="a4-footer"><span>取材管理システム 試作２号</span><span>${dateLabel} 取材一覧</span></div>
+  </div>`;
   document.getElementById('pp').innerHTML=page;document.getElementById('pp-out').innerHTML=page;
 }
 
