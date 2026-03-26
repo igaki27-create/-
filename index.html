@@ -160,8 +160,8 @@ body{font-family:var(--font-sans);background:#e8e8e8;display:flex;align-items:fl
 .k-body{position:relative;width:68px}
 .k-tick{position:absolute;left:0;right:0;border-top:0.5px solid #e8c88a}
 .k-tick-l{font-size:7px;color:#9a6010;padding-left:2px;line-height:1;display:block;margin-top:-1px}
-.k-seg{position:absolute;left:2px;right:2px;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:3px 2px}
-.k-seg-l{font-size:8px;color:#fff;font-weight:600;text-align:center;line-height:1.4;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+.k-seg{position:absolute;left:2px;right:2px;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;padding:4px 3px;gap:1px}
+.k-seg-l{font-size:8.5px;color:#fff;font-weight:700;text-align:center;line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
 .iv-wrap{flex:1;min-width:0}
 .iv-hdr{display:flex;background:#2c3e50;color:#fff;font-size:9.5px;font-weight:500}
 .iv-hdr-c{padding:5px 6px;flex-shrink:0}
@@ -995,11 +995,20 @@ function rPrint(){
     const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);
     const short=u2?`C${u2.n}`:'未';
     const mems=u2?u2.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・'):'未割当';
-    colH+=`<div class="k-seg" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;background:${col}">
-      <span class="k-seg-l">${short}</span>
-      <span class="k-seg-l" style="font-size:7.5px;opacity:.95">${mems}</span>
-      <span class="k-seg-l" style="font-size:7px;opacity:.85">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span>
-    </div>`;
+    const timeStr=`${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}`;
+    // 高さに応じて表示する情報量を変える
+    let segContent='';
+    if(h>=52){
+      // 十分な高さ：クルー番号＋名前＋時刻
+      segContent=`<span class="k-seg-l">${short}</span><span class="k-seg-l" style="font-size:7.5px">${mems}</span><span class="k-seg-l" style="font-size:7px;opacity:.85">${timeStr}</span>`;
+    } else if(h>=30){
+      // 中程度：クルー番号＋時刻
+      segContent=`<span class="k-seg-l">${short}</span><span class="k-seg-l" style="font-size:7px;opacity:.85">${timeStr}</span>`;
+    } else {
+      // 狭い：クルー番号のみ
+      segContent=`<span class="k-seg-l">${short}</span>`;
+    }
+    colH+=`<div class="k-seg" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;background:${col}">${segContent}</div>`;
   });
 
   // ── 取材行HTML（区画ごとに連続して並べる） ──
