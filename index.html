@@ -160,8 +160,8 @@ body{font-family:var(--font-sans);background:#e8e8e8;display:flex;align-items:fl
 .k-body{position:relative;width:68px}
 .k-tick{position:absolute;left:0;right:0;border-top:0.5px solid #e8c88a}
 .k-tick-l{font-size:7px;color:#9a6010;padding-left:2px;line-height:1;display:block;margin-top:-1px}
-.k-seg{position:absolute;left:4px;right:4px;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:2px}
-.k-seg-l{font-size:7px;color:#fff;font-weight:500;text-align:center;line-height:1.3}
+.k-seg{position:absolute;left:2px;right:2px;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:3px 2px}
+.k-seg-l{font-size:8px;color:#fff;font-weight:600;text-align:center;line-height:1.4;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
 .iv-wrap{flex:1;min-width:0}
 .iv-hdr{display:flex;background:#2c3e50;color:#fff;font-size:9.5px;font-weight:500}
 .iv-hdr-c{padding:5px 6px;flex-shrink:0}
@@ -427,7 +427,13 @@ textarea.fi{resize:vertical;min-height:60px;line-height:1.6}
       <div id="view-interviews" class="vw"><div class="sa">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
           <span style="font-size:13px;font-weight:500;color:var(--ct)">取材項目一覧</span>
-          <button class="btn btp bts" onclick="openIvM()">+ 新規取材</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <select class="fi" id="iv-sort-sel" style="padding:3px 8px;font-size:11px;width:auto" onchange="ivSortMode=this.value;rIvs()">
+              <option value="time">時刻順</option>
+              <option value="active">進行中を上に</option>
+            </select>
+            <button class="btn btp bts" onclick="openIvM()">+ 新規取材</button>
+          </div>
         </div>
         <div id="iv-list"></div>
       </div></div>
@@ -628,7 +634,7 @@ let UNITS=Array.from({length:12},(_,i)=>({n:i+1,members:[],status:'active',task:
 UNITS[0].task='取材中';UNITS[1].task='帰社中';UNITS[4].status='busy';UNITS[4].task='場所変更対応中';
 
 const DS=[7,8,7,9,8,7,9,8,7,8,9,7];
-const KC=['#C85A00','#A03A00','#7d3c00','#5a2a00','#3d1c00','#8b4400'];
+const KC=['#4A90C4','#2E7BAE','#1A6699','#3A8CBF','#2575A8','#5599CC'];
 
 function getStaff(id){return STAFF.find(s=>s.id===id);}
 function unitOfStaff(sid){return UNITS.find(u=>u.members.includes(sid));}
@@ -756,21 +762,42 @@ function rUnits(){
   const sc={active:'sa2',standby:'ss2',busy:'sb2'},st={active:'稼働中',standby:'待機中',busy:'対応中'};
   document.getElementById('units-grid').innerHTML=UNITS.map(u=>{const mems=u.members.map(id=>getStaff(id)).filter(Boolean);return`<div class="uc"><div class="uh"><span class="unl">クルー ${u.n}</span><span class="ust ${sc[u.status||'standby']}">${st[u.status||'standby']}</span></div><div class="umems">${mems.length?mems.map(m=>`<div style="flex:1;display:flex;gap:7px;align-items:flex-start;min-width:0"><div class="mav" style="background:${m.col.bg};color:${m.col.tc}">${m.init}</div><div style="min-width:0"><div class="mn2">${m.name}</div><div class="mr2">${m.role}</div><div class="me" onclick="openMemberEmail('${m.email}','${m.name}')">${m.email.split('@')[0]}@...</div></div></div>`).join(''):'<div style="font-size:11px;color:var(--ct3);padding:4px 0">要員未配置</div>'}</div><div class="ut">📌 ${u.task||'待機中'}</div><div class="uer"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--ct3)" stroke-width="1.5" style="flex-shrink:0"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M1 5l7 5 7-5"/></svg><span class="uea">crew${u.n}@hodo.example.com</span><button class="btn bts" onclick="openUnitEmail(${u.n})" style="padding:2px 8px;font-size:10px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8l12-6-6 12V9L2 8z"/></svg>送信</button></div></div>`;}).join('');}
 
+let ivSortMode='time';
+function isFinished(iv){
+  const now=new Date();
+  const todayStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  if(iv.date!==todayStr)return false;
+  return(toMin(iv.time)+iv.dur)<=(now.getHours()*60+now.getMinutes());
+}
 function rIvs(){
-  const pn={high:'高',med:'中',low:'低'},pc={high:'ph',med:'pm',low:'pl'};
-  document.getElementById('iv-list').innerHTML=[...IVS].sort((a,b)=>a.time.localeCompare(b.time)).map(iv=>`
-    <div class="ic${isUA(iv)?'" style="border-left:2px solid #BA7517':iv.kind==='dai'?'" style="border-left:2px solid #c62828':'"'}">
-      <div class="itb"><div class="itm">${iv.time}</div><div class="id2">${iv.date.slice(5).replace('-','/')}</div></div>
+  const sorted=[...IVS].sort((a,b)=>a.time.localeCompare(b.time));
+  let displayed;
+  if(ivSortMode==='active'){
+    const done=sorted.filter(iv=>isFinished(iv));
+    const active=sorted.filter(iv=>!isFinished(iv));
+    displayed=[...active,...done];
+  } else {
+    displayed=sorted;
+  }
+  const blMap={uni:'4px solid #378ADD',dai:'4px solid #A32D2D',kantei:'4px solid #D85A30'};
+  document.getElementById('iv-list').innerHTML=displayed.map(iv=>{
+    const fin=isFinished(iv);
+    const bl=isUA(iv)?'4px solid #BA7517':(blMap[iv.kind]||'4px solid #ccc');
+    const overlay=fin?'<div style="position:absolute;inset:0;background:rgba(190,190,190,0.42);pointer-events:none;z-index:2;border-radius:inherit"></div>':'';
+    return`<div class="ic" style="border-left:${bl};position:relative;opacity:${fin?0.65:1}">
+      ${overlay}
+      <div class="itb"><div class="itm">${iv.time}</div><div class="id2">${iv.date.slice(5).replace('-','/')}</div>${fin?'<div style="font-size:9px;color:#999;margin-top:2px">終了</div>':''}</div>
       <div style="flex:1">
         <div class="iti">${iv.title}${kindBadge(iv)}${isUA(iv)?'<span class="uab2">未割当</span>':''}</div>
         <div class="imt"><span>📍 ${iv.place}</span><span>⏱ ${iv.dur}分</span></div>
-        ${iv.daiDetail?`<div class="ino" style="border-left-color:#c62828">📺 ${iv.daiDetail}</div>`:''}
+        ${iv.daiDetail?`<div class="ino" style="border-left-color:#A32D2D">📺 ${iv.daiDetail}</div>`:''}
         ${iv.note?`<div class="ino">${iv.note}</div>`:''}
         <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="iu" onclick="${isUA(iv)?`openAs(${iv.id})`:`mailFromIv('${iv.unit}')`}">${isUA(iv)?'👉 担当を割り当て':iv.unit+' ✉'}</span>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function mailFromIv(un){const n=parseInt(un.replace('クルー ',''));if(!isNaN(n))openUnitEmail(n);}
 
@@ -961,15 +988,17 @@ function rPrint(){
   // 官邸コマ帯
   kList.forEach((iv,i)=>{
     const{top,h}=komaY(iv);
-    if(h<=0)return;
+    const minH=MIN_ROWS_PER_KOMA*MIN_ROW;
+    const hh=Math.max(minH,h);
+    if(hh<=0)return;
     const col=KC[i%KC.length];
     const u2=UNITS.find(x=>`クルー ${x.n}`===iv.unit);
     const short=u2?`C${u2.n}`:'未';
     const mems=u2?u2.members.map(id=>getStaff(id)?.name.split(' ')[0]).join('・'):'未割当';
     colH+=`<div class="k-seg" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;background:${col}">
       <span class="k-seg-l">${short}</span>
-      <span class="k-seg-l" style="font-size:6px;opacity:.85">${mems}</span>
-      <span class="k-seg-l" style="font-size:6px;opacity:.75">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span>
+      <span class="k-seg-l" style="font-size:7.5px;opacity:.95">${mems}</span>
+      <span class="k-seg-l" style="font-size:7px;opacity:.85">${fmtT(toMin(iv.time))}〜${fmtT(toMin(iv.time)+iv.dur)}</span>
     </div>`;
   });
 
@@ -1010,7 +1039,7 @@ function rPrint(){
   const page=`<div class="a4"><div class="a4-ph"><div><div class="a4-ttl">取材項目一覧</div><div style="font-size:10px;color:#555;margin-top:3px">${dateLabel} &nbsp;${fmtT(rS)}〜${fmtT(rE)}</div></div><div class="a4-meta">${printLabel}<br>ユニ取材 ${nList.filter(iv=>iv.kind==='uni').length}件 / 代表取材 ${nList.filter(iv=>iv.kind==='dai').length}件 / 官邸担当 ${kList.length}件</div></div>
   ${kleg}
   <div class="a4-legend">
-    <div class="leg"><div class="leg-sw" style="background:#C85A00"></div>官邸担当帯（左縦列）</div>
+    <div class="leg"><div class="leg-sw" style="background:#4A90C4"></div>官邸担当帯（左縦列）</div>
     <div class="leg"><div class="leg-sw" style="background:#fffbf4;border:1px solid #F0997B"></div>官邸コマと重なる取材</div>
     <div class="leg"><div class="leg-sw" style="background:#fff5f5;border:1px solid #c62828"></div>代表取材</div>
     <div class="leg"><div class="leg-sw" style="background:#fff8f0;border:1px solid #BA7517"></div>未割当</div>
